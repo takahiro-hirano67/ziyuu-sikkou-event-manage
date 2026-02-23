@@ -1,36 +1,24 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 自由ヶ丘執行委員会 イベント管理アプリ
 
-## Getting Started
+## 1. 概要・設計思想
 
-First, run the development server:
+組織活動の核となる機能であり、**企画立案から当日の運営、振り返りまでを一元管理**することを目的としています。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+* **企画書中心アプローチ:** データを入力して終わりではなく、最終的に提出用の企画書（Markdown）が生成されるなど、実務のアウトプットに直結する実用性第一の設計思想を持っています。
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 2. 主な機能と特徴
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+実際に組織で使用中の企画書を基に、UIと型定義が作成されています。イベントに関する以下の項目を統合的に管理します。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* **基本情報・内容管理:** イベントの基本データやコンテンツ内容の管理（`basic`, `content`）
+* **物品管理:** イベントで必要となる備品や景品の管理（`items/equipment`, `items/prizes`）
+* **タスク管理:** イベントに向けた準備等のタスクの進捗管理（`tasks`）
+* **ノート機能:** 議事録の要約やアイデアを記録しておく機能（`notes`）
 
-## Learn More
+## 3. 今後のロードマップ（開発予定）
 
-To learn more about Next.js, take a look at the following resources:
+* **企画書エクスポート機能:** 登録したイベント情報から、Markdown形式の企画書としてデータを出力・生成する機能を実装予定です。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 4. イベント管理機能のディレクトリ構成
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+コロケーション（Colocation）の原則に基づき、イベント管理機能（`events`）に必要なコンポーネント、型定義、モックデータなどが1つのディレクトリに集約されています。
