@@ -1,0 +1,48 @@
+{
+    "output": {
+        "filePath": "repomix-output.xml",
+        "style": "xml",
+        "parsableStyle": false,
+        "compress": false,
+        "headerText": "自由ヶ丘執行委員会 イベント管理アプリ",
+        "fileSummary": true,
+        "directoryStructure": true,
+        "files": true,
+        "removeComments": false,
+        "removeEmptyLines": false,
+        "topFilesLength": 5,
+        "showLineNumbers": false,
+        "truncateBase64": false,
+        "copyToClipboard": false,
+        "includeEmptyDirectories": false,
+        "git": {
+            "sortByChanges": false
+        }
+    },
+    "include": ["**/*"],
+    "ignore": {
+        "useGitignore": true,
+        "useDefaultPatterns": true,
+        "customPatterns": [
+            "additional-folder",
+            "**/*.log",
+            ".gitignore",
+            "eslint.config.mjs",
+            "next.config.ts",
+            "postcss.config.mjs",
+            "tsconfig.json",
+            "types/api.ts",
+            "tailwind.config.js",
+            "repomix.config.json",
+            "public/",
+            "app/favicon.ico",
+            "components/markdown/"
+        ]
+    },
+    "security": {
+        "enableSecurityCheck": true
+    },
+    "tokenCount": {
+        "encoding": "o200k_base"
+    }
+}

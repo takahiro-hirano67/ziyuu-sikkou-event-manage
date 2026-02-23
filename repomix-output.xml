@@ -1,0 +1,3568 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+- Pay special attention to the Repository Description. These contain important context and guidelines specific to this project.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: **/*
+- Files matching these patterns are excluded: additional-folder, **/*.log, .gitignore, eslint.config.mjs, next.config.ts, postcss.config.mjs, tsconfig.json, types/api.ts, tailwind.config.js, repomix.config.json, public/, app/favicon.ico, components/markdown/
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+</notes>
+
+</file_summary>
+
+<user_provided_header>
+自由ヶ丘執行委員会 イベント管理アプリ
+</user_provided_header>
+
+<directory_structure>
+.env.local.example
+app/events/[id]/basic/BasicClient.tsx
+app/events/[id]/basic/page.tsx
+app/events/[id]/content/ContentClient.tsx
+app/events/[id]/content/page.tsx
+app/events/[id]/items/equipment/EquipmentClient.tsx
+app/events/[id]/items/equipment/page.tsx
+app/events/[id]/items/ItemsClient.tsx
+app/events/[id]/items/layout.tsx
+app/events/[id]/items/page.tsx
+app/events/[id]/items/prizes/page.tsx
+app/events/[id]/items/prizes/PrizesClient.tsx
+app/events/[id]/layout.tsx
+app/events/[id]/notes/[noteId]/NoteDetailClient.tsx
+app/events/[id]/notes/[noteId]/page.tsx
+app/events/[id]/notes/NotesClient.tsx
+app/events/[id]/notes/page.tsx
+app/events/[id]/tasks/page.tsx
+app/events/[id]/tasks/TasksClient.tsx
+app/events/components/EventHeader.tsx
+app/events/components/EventTabNavigation.tsx
+app/events/EventClient.tsx
+app/events/lib/mock-data.ts
+app/events/lib/types.ts
+app/events/page.tsx
+app/globals.css
+app/layout.tsx
+app/page.tsx
+components/layout/header.tsx
+components/ui/CopyButton.tsx
+documents/app/イベント管理機能について.md
+documents/tech/動的ルートパラメータの非同期化.md
+package.json
+README.md
+util/FormatDate.ts
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".env.local.example">
+# .env.example
+# このファイルをコピーして .env.local を作成し、実際の値を設定してください
+
+# アプリケーション設定
+NEXT_PUBLIC_APP_NAME="自由ヶ丘執行委員会 ポータル"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+
+# データベース (Neon接続後に設定/それまではモックデータによる開発)
+DATABASE_URL=""
+</file>
+
+<file path="app/events/[id]/basic/BasicClient.tsx">
+// app/events/[id]/basic/BasicClient.tsx
+
+"use client"
+
+import MarkdownViewer from "@/components/markdown/MarkdownViewer";
+import Link from "next/link";
+import type { EventWithRelations } from "../../lib/types";
+
+// ============================================================
+// メインコンポーネント
+// ============================================================
+
+// 基本情報タブ: 文書スタイルで表示
+export function BasicClient({ event }: { event: EventWithRelations }) {
+
+    // イベントの状態ラベル
+    const statusLabels: Record<string, string> = {
+        planning: "企画中",
+        preparing: "準備中",
+        in_progress: "開催中",
+        completed: "開催済み",
+        archived: "アーカイブ",
+    };
+
+    return (
+        <div className="px-4 pt-6 pb-32">
+            <div className="max-w-4xl mx-auto">
+                {/* 開催目的：文章として見せる（値がない場合もセクションは表示） */}
+                <div className="mb-8">
+                    <Section title="開催目的" >
+                        <hr className="border-gray-200 pb-2" />
+                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed min-h-[1.5em]">
+                            {/* 値がない場合は空表示 */}
+                            {event.purpose}
+                        </p>
+                    </Section>
+                </div>
+
+                {/* 基本情報以降：2カラムレイアウト */}
+                <div className="space-y-6 mb-8 pb-4 w-full max-w-full min-w-full">
+                    <Section title="基本情報">
+                        <InfoList>
+                            <InfoRow label="イベント名" value={event.name} />
+
+                            <InfoRow label="カテゴリ / 状態" value={`${event.category} / ${statusLabels[event.status]}`} />
+                            <InfoRow label="概要" value={event.overview} isLongText />
+                            <InfoRow label="開催場所" value={event.location} />
+                            <InfoRow label="開催日" value={event.date} />
+                            <InfoRow label="開始時間" value={event.startTime} />
+                            <InfoRow label="終了時間" value={event.endTime} />
+                            <InfoRow label="準備開始時間" value={event.prepTime} />
+                            {/* 数値型などは undefined チェックを行う */}
+                            <InfoRow label="参加想定人数" value={event.expectedParticipants ? `${event.expectedParticipants}名` : undefined} />
+                            <InfoRow label="イベント予算" value={event.budget ? `¥${event.budget.toLocaleString()}` : undefined} />
+                            <InfoRow label="ターゲット層" value={event.targetAudience} isLongText />
+                            <InfoRow label="宣伝方法" value={event.promotionMethods} isLongText />
+
+                            {/* coreReferenceUrl 自体がない場合を考慮 */}
+                            <InfoRow
+                                label="主要リンク"
+                                value={
+                                    event.coreReferenceUrl ? (
+                                        <Link className="text-blue-600" target="_blank" href={event.coreReferenceUrl.url}>
+                                            {event.coreReferenceUrl.label}
+                                        </Link>
+                                    ) : undefined
+                                }
+                                isLongText
+                            />
+                        </InfoList>
+                    </Section>
+
+                    {/* 当日運営役割：空オブジェクトへのフォールバック込み */}
+                    <Section title="当日運営役割">
+                        <InfoList>
+                            {Object.entries(event.roles || {}).map(([role, assignee]) => (
+                                <InfoRow key={role} label={role} value={assignee} />
+                            ))}
+                        </InfoList>
+                    </Section>
+
+                    {/* タイムテーブル */}
+                    <Section title="タイムテーブル">
+                        <InfoList>
+                            {Object.entries(event.timeTable || {}).map(([time, content]) => (
+                                <InfoRow key={time} label={time} value={content} />
+                            ))}
+                        </InfoList>
+                    </Section>
+
+                    {/* 参考URL */}
+                    <Section title="参考URL">
+                        <InfoList>
+                            {Object.entries(event.referenceUrls || {}).map(([label, url]) =>
+                            (
+                                <InfoRow key={label} label={label} value={<Link href={url} className="text-blue-600" target="_brank">{url}</Link>} />
+                            ))}
+                        </InfoList>
+                    </Section>
+                </div>
+
+                {/* 任意メモ欄：値がない場合は空文字を渡す */}
+                <div className="mb-8">
+                    <Section title="メモ">
+                        <hr className="border-gray-200 pb-2" />
+                        <MarkdownViewer content={event.memo || ""} />
+                    </Section>
+                </div>
+
+            </div>
+        </div>
+    );
+}
+
+// ============================================================
+// ヘルパーコンポーネント (変更なし)
+// ============================================================
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+    return (
+        <div>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                {title}
+            </h2>
+            {children}
+        </div>
+    );
+}
+
+function InfoList({ children }: { children: React.ReactNode }) {
+    return (
+        <dl className="border-t border-gray-100 w-full">
+            {children}
+        </dl>
+    );
+}
+
+function InfoRow({
+    label,
+    value,
+    isLongText = false
+}: {
+    label: string;
+    value: React.ReactNode; // 文字列だけでなく<Link>にも対応するため
+    isLongText?: boolean
+}) {
+    return (
+        <div className="flex w-full border-b border-gray-100 py-3 sm:gap-4">
+            <dt className="w-1/3 sm:w-1/4 shrink-0 text-sm font-medium text-gray-500">
+                {label}
+            </dt>
+            {/* value が undefined/null の場合は何も表示されませんが、dt(label)は残ります */}
+            <dd className={`grow text-sm text-gray-800 ${isLongText ? 'whitespace-pre-wrap' : ''}`}>
+                {value}
+            </dd>
+        </div>
+    );
+}
+</file>
+
+<file path="app/events/[id]/basic/page.tsx">
+// app/events/[id]/basic/page.tsx
+
+import { notFound } from "next/navigation";
+import { getEventById } from "../../lib/mock-data";
+import { BasicClient } from "./BasicClient"; // クライアントコンポーネントをインポート
+
+// ============================================================
+// 【サーバーサイドページ】
+// データを受け取ってクライアントに渡す
+// paramsの型定義→Promise
+// 拡張性を考慮し、フックを利用していない機能でも同様の規則で記述
+// ============================================================
+
+export default async function EventBasicPage({ params }: { params: Promise<{ id: string }> }) {
+
+    // 1. await で取り出す
+    const { id } = await params;
+
+    // 2. 取り出した id を使用
+    const event = getEventById(id);
+
+    // 3. ハンドリング
+    if (!event) {
+        notFound();
+    }
+
+    // 4. クライアントコンポーネントへデータを流し込む（ここで渡すデータはシリアライズ可能（JSON化可能）である必要）
+    return <BasicClient event={event} />;
+}
+</file>
+
+<file path="app/events/[id]/content/ContentClient.tsx">
+// app/events/[id]/content/ContentClient.tsx
+
+"use client"
+
+import MarkdownViewer from "@/components/markdown/MarkdownViewer";
+import { useState } from "react";
+import { LuChevronDown, LuChevronUp } from "react-icons/lu";
+import type { EventContent, EventWithRelations } from "../../lib/types";
+
+// ============================================================
+// メインコンポーネント
+// ============================================================
+
+export function ContentClient({ event }: { event: EventWithRelations }) {
+
+    // contents自体がundefinedの可能性も考慮して安全にアクセス
+    const contents = event.contents || [];
+
+    return (
+        <div className="px-4 pt-6 pb-32">
+            <div className="max-w-4xl mx-auto space-y-4">
+                <h2 className="text-xl font-semibold text-gray-800">
+                    企画一覧
+                </h2>
+                <hr className="border-gray-200 pb-2" />
+                {contents
+                    .sort((a, b) => a.order - b.order)
+                    .map((content) => (
+                        <ContentCard key={content.id} content={content} />
+                    ))}
+
+                {/* コンテンツがない場合 */}
+                {contents.length === 0 && (
+                    <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+                        <p className="text-gray-500">企画内容が登録されていません</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// ============================================================
+// 企画カードコンポーネント（アコーディオン）
+// ============================================================
+
+function ContentCard({ content }: { content: EventContent }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            {/* ヘッダー（クリックで開閉） */}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
+            >
+                <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-gray-500 shrink-0">企画 {content.order}</span>
+                    <h3 className="text-md font-semibold text-gray-600 break-all">{content.name}</h3>
+                </div>
+                {isOpen ? (
+                    <LuChevronUp className="w-5 h-5 text-gray-400 shrink-0" />
+                ) : (
+                    <LuChevronDown className="w-5 h-5 text-gray-400 shrink-0" />
+                )}
+            </button>
+
+            {/* コンテンツ（展開時のみ表示） */}
+            {isOpen && (
+                <div className="px-6 pb-6 space-y-6 border-t border-gray-200 pt-4">
+
+                    {/* 概要 */}
+                    <Section title="概要">
+                        <p className="text-gray-700 whitespace-pre-wrap min-h-[1.5em]">
+                            {content.overview}
+                        </p>
+                    </Section>
+
+                    {/* 説明 */}
+                    <Section title="説明">
+                        <p className="text-gray-700 whitespace-pre-wrap min-h-[1.5em]">
+                            {content.description}
+                        </p>
+                    </Section>
+
+                    {/* 企画の流れ */}
+                    <Section title="企画の流れ">
+                        <p className="text-gray-700 whitespace-pre-wrap min-h-[1.5em]">
+                            {content.flow}
+                        </p>
+                    </Section>
+
+                    {/* 準備物 */}
+                    <Section title="準備物">
+                        <p className="text-gray-700 whitespace-pre-wrap min-h-[1.5em]">
+                            {content.equipment}
+                        </p>
+                    </Section>
+
+                    {/* 参考URL: 空配列フォールバック */}
+                    <Section title="参考URL">
+                        {/* URLがある場合 */}
+                        {(content.referenceUrls && content.referenceUrls.length > 0) ? (
+                            <ul className="space-y-1">
+                                {content.referenceUrls.map((url: string, index: number) => (
+                                    <li key={index} className="truncate">
+                                        <a
+                                            href={url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 hover:underline text-sm"
+                                        >
+                                            {url}
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            // URLがない場合
+                            <p className="text-gray-400 text-sm italic">なし</p>
+                        )}
+                    </Section>
+                    {/* 任意メモ欄：値がない場合は空文字を渡す */}
+                    <div className="mb-8">
+                        <Section title="メモ">
+                            <MarkdownViewer content={content.memo || ""} />
+                        </Section>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+    return (
+        <div>
+            <h4 className="text-sm font-semibold text-gray-700 mb-2 border-l-4 border-gray-300 pl-2">
+                {title}
+            </h4>
+            <div className="pl-3">
+                {children}
+            </div>
+        </div>
+    );
+}
+</file>
+
+<file path="app/events/[id]/content/page.tsx">
+// app/events/[id]/content/page.tsx
+
+import { notFound } from "next/navigation";
+import { getEventById } from "../../lib/mock-data";
+import { ContentClient } from "./ContentClient";
+
+export default async function EventContentPage({
+    params
+}: {
+    params: Promise<{ id: string }>
+}) {
+    // 情報取得
+    const { id } = await params;
+    const event = getEventById(id);
+
+    if (!event) {
+        notFound();
+    }
+
+    return <ContentClient event={event} />
+}
+</file>
+
+<file path="app/events/[id]/items/equipment/EquipmentClient.tsx">
+// app/events/[id]/items/equipment/EquipmentClient.tsx
+
+"use client"
+
+import type { EventEquipment, EventWithRelations } from "../../../lib/types";
+
+// ============================================================
+// メインコンポーネント
+// ============================================================
+
+export function EquipmentClient({ event }: { event: EventWithRelations }) {
+
+    // 配列が未定義の場合に備えて空配列をデフォルトにする
+    const equipmentList = event.equipment || [];
+
+    return (
+        <div>
+            {equipmentList.length > 0 ? (
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <EquipmentTable equipment={equipmentList} />
+                </div>
+            ) : (
+                <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+                    <p className="text-gray-500">備品が登録されていません</p>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ============================================================
+// サブコンポーネント
+// ============================================================
+
+export function EquipmentTable({ equipment }: { equipment: EventEquipment[] }) {
+    return (
+        <div className="overflow-x-auto pb-2">
+            <table className="w-full min-w-max text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">No.</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">品名</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">用途</th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">調達</th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">価格</th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">備考</th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">参考リンク</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                    {equipment
+                        .sort((a, b) => a.order - b.order)
+                        .map((item) => {
+                            // ステータスに応じたラベルと色の定義
+                            const statusConfig = {
+                                inStock: { label: "既存", color: "bg-gray-100 text-gray-600" },
+                                required: { label: "要購入", color: "bg-yellow-100 text-yellow-700" },
+                                completed: { label: "購入済", color: "bg-green-100 text-green-700" },
+                            };
+
+                            // 現在のステータス情報（未定義の場合はundefined）
+                            const currentStatus = item.purchaseStatus ? statusConfig[item.purchaseStatus] : undefined;
+
+                            return (
+                                <tr key={item.id} className="hover:bg-gray-50">
+                                    <td className="px-4 py-3 text-left text-gray-600">{item.order}</td>
+                                    <td className="px-4 py-3 text-left text-gray-800 font-medium">{item.itemName}</td>
+
+                                    {/* 用途: 未入力時はハイフン */}
+                                    <td className="px-4 py-3 text-gray-600">{item.purpose || "-"}</td>
+
+                                    {/* 調達ステータス */}
+                                    <td className="px-4 py-3 text-center">
+                                        {currentStatus ? (
+                                            <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${currentStatus.color}`}>
+                                                {currentStatus.label}
+                                            </span>
+                                        ) : (
+                                            <span className="text-gray-400">-</span>
+                                        )}
+                                    </td>
+
+                                    {/* 価格: null/undefined の場合のみハイフン（0円は表示） */}
+                                    <td className={`px-4 py-3 text-gray-600 ${item.price != null ? "text-right " : "text-center"}`}>
+                                        {item.price != null ? `¥${item.price.toLocaleString()}` : "-"}
+                                    </td>
+
+                                    {/* 備考: 未入力時はハイフン */}
+                                    <td className={`px-4 py-3 text-gray-600 ${item.note ? "text-left" : "text-center"}`}>
+                                        {item.note || "-"}
+                                    </td>
+
+                                    {/* 参考リンク */}
+                                    <td className="px-4 py-3 text-center text-xs">
+                                        {item.referenceUrl ? (
+                                            <a
+                                                href={item.referenceUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:underline font-medium"
+                                            >
+                                                {item.referenceUrl}
+                                            </a>
+                                        ) : (
+                                            <span className="text-gray-400">-</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+</file>
+
+<file path="app/events/[id]/items/equipment/page.tsx">
+// app/events/[id]/items/equipment/page.tsx
+
+import { notFound } from "next/navigation";
+
+import { getEventById } from "../../../lib/mock-data";
+import { EquipmentClient } from "./EquipmentClient";
+
+export default async function EventEquipmentPage({
+    params
+}: {
+    params: Promise<{ id: string }>
+}) {
+    // 情報取得
+    const { id } = await params;
+    const event = getEventById(id);
+
+    if (!event) {
+        notFound();
+    }
+
+    return <EquipmentClient event={event} />
+}
+</file>
+
+<file path="app/events/[id]/items/ItemsClient.tsx">
+// app/events/[id]/items/ItemsClient.tsx
+
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import type { EventWithRelations } from "../../lib/types";
+
+// ============================================================
+// 【備品/景品 統合クライアント】
+// 切り替えタブ
+// 現在のルート判定
+// ============================================================
+export function ItemsClient({
+    children,
+    event,
+}: {
+    children: React.ReactNode;
+    event: EventWithRelations;
+}) {
+    const pathname = usePathname();
+
+    // 基本パス
+    const itemsBasePath = `/events/${event.id}/items`;
+
+    // ラベル・リンク一覧
+    const items = [
+        { label: "備品", href: `${itemsBasePath}/equipment` },
+        { label: "景品", href: `${itemsBasePath}/prizes` },
+    ];
+
+    // 現在のラベルを取得
+    const currentItem = items.find((item) => item.href === pathname);
+    const currentLabel = currentItem?.label;
+
+    return (
+        <div className="px-4 pt-6 pb-32">
+            <div className="max-w-4xl mx-auto">
+                <div className="flex items-center justify-between pb-2 mr-2 mb-6 border-b border-gray-200">
+                    {/* タイトル（備品 or 景品） */}
+                    <h2 className="text-xl font-semibold text-gray-800">
+                        {currentLabel}一覧
+                    </h2>
+                    {/* 切り替えボタン */}
+                    <div className="flex">
+                        <div className="inline-flex rounded-full bg-gray-50 p-1">
+                            {items.map((item) => {
+                                const isActive = pathname === item.href;
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={`px-4 py-1 text-sm font-medium rounded-full transition
+                                ${isActive
+                                                ? "bg-blue-100 text-blue-700 shadow-sm"
+                                                : "text-gray-600 hover:text-gray-900"
+                                            }`}>
+                                        {item.label}
+                                    </Link>
+                                )
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* 子ルート */}
+                {children}
+
+            </div>
+        </div>
+    );
+}
+</file>
+
+<file path="app/events/[id]/items/layout.tsx">
+// app/events/[id]/items/layout.tsx
+
+import { notFound } from "next/navigation";
+import { getEventById } from "../../lib/mock-data";
+import { ItemsClient } from "./ItemsClient";
+
+export default async function ItemsLayout({ children, params }: { children: React.ReactNode, params: Promise<{ id: string }> }) {
+
+    // 1. await で取り出す
+    const { id } = await params;
+
+    // 2. 取り出した id を使用
+    const event = getEventById(id);
+
+    // 3. ハンドリング
+    if (!event) {
+        notFound();
+    }
+
+    return (
+        <ItemsClient event={event} >
+            {children}
+        </ItemsClient>
+    );
+}
+</file>
+
+<file path="app/events/[id]/items/page.tsx">
+// app/events/[id]/items/page.tsx
+
+import { redirect } from "next/navigation";
+
+export default async function ItemsIndexPage({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}) {
+    const { id } = await params;
+
+    // リダイレクト専用
+    redirect(`/home/tools/events/${id}/items/equipment`);
+}
+</file>
+
+<file path="app/events/[id]/items/prizes/page.tsx">
+// app/events/[id]/items/prizes/page.tsx
+
+import { notFound } from "next/navigation";
+
+import { getEventById } from "../../../lib/mock-data";
+import { PrizesClient } from "./PrizesClient";
+
+export default async function EventPrizesPage({
+    params
+}: {
+    params: Promise<{ id: string }>
+}) {
+    // 情報取得
+    const { id } = await params;
+    const event = getEventById(id);
+
+    if (!event) {
+        notFound();
+    }
+
+    return <PrizesClient event={event} />
+}
+</file>
+
+<file path="app/events/[id]/items/prizes/PrizesClient.tsx">
+// app/events/[id]/items/prizes/PrizesClient.tsx
+
+"use client"
+
+import type { EventPrize, EventWithRelations } from "../../../lib/types";
+
+// ============================================================
+// メインコンポーネント
+// ============================================================
+
+export function PrizesClient({ event }: { event: EventWithRelations }) {
+
+    // 配列が未定義の場合に備えて空配列をデフォルトにする
+    const prizeList = event.prizes || [];
+
+    return (
+        <>
+            {prizeList.length > 0 ? (
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <PrizeTable prizes={prizeList} />
+                </div>
+            ) : (
+                <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+                    <p className="text-gray-500">景品が登録されていません</p>
+                </div>
+            )}
+        </>
+    );
+}
+
+// ============================================================
+// サブコンポーネント
+// ============================================================
+
+export function PrizeTable({ prizes }: { prizes: EventPrize[] }) {
+    return (
+        <div className="overflow-x-auto pb-2">
+            <table className="w-full min-w-max text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">No.</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">品名</th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">カテゴリ</th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">想定価格</th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">実購入価格</th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">購入先候補</th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">一言紹介</th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">提案者</th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">参考リンク</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                    {prizes
+                        .sort((a, b) => a.order - b.order)
+                        .map((item) => {
+
+                            // カテゴリバッジの色定義
+                            const categoryColors: Record<string, string> = {
+                                "大景品": "bg-red-100 text-red-700",
+                                "中景品": "bg-orange-100 text-orange-700",
+                                "小景品": "bg-green-100 text-green-700",
+                            };
+
+                            // カテゴリがない場合の処理
+                            const categoryLabel = item.category || "未分類";
+                            // 定義されていないカテゴリ（未分類含む）はグレーにする
+                            const badgeColor = (item.category && categoryColors[item.category])
+                                ? categoryColors[item.category]
+                                : "bg-gray-100 text-gray-500";
+
+                            return (
+                                <tr key={item.id} className="hover:bg-gray-50">
+                                    <td className="px-4 py-3 text-gray-600">{item.order}</td>
+                                    <td className="px-4 py-3 text-gray-800 font-medium">{item.itemName}</td>
+
+                                    {/* カテゴリ */}
+                                    <td className="px-4 py-3 text-center">
+                                        <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${badgeColor}`}>
+                                            {categoryLabel}
+                                        </span>
+                                    </td>
+
+                                    {/* 想定価格 */}
+                                    <td className={`px-4 py-3 text-gray-600 ${item.estimatedPrice != null ? "text-right" : "text-center"}`}>
+                                        {item.estimatedPrice != null ? `¥${item.estimatedPrice.toLocaleString()}` : "-"}
+                                    </td>
+
+                                    {/* 実価格 */}
+                                    <td className={`px-4 py-3 text-gray-600 ${item.actualPrice != null ? "text-right" : "text-center"}`}>
+                                        {item.actualPrice != null ? `¥${item.actualPrice.toLocaleString()}` : "-"}
+                                    </td>
+
+                                    {/* 購入先候補 */}
+                                    <td className="px-4 py-3 text-gray-600 text-xs">
+                                        {item.storeCandidates || "-"}
+                                    </td>
+
+                                    {/* 一言紹介 */}
+                                    <td className={`px-4 py-3 text-gray-600 text-xs ${item.description ? "text-left" : "text-center"}`}>
+                                        {item.description || "-"}
+                                    </td>
+
+                                    {/* 提案者 */}
+                                    <td className="px-4 py-3 text-gray-600">
+                                        {item.proposedBy || "-"}
+                                    </td>
+
+                                    {/* 参考リンク */}
+                                    <td className="px-4 py-3 text-center text-xs">
+                                        {item.referenceUrl ? (
+                                            <a
+                                                href={item.referenceUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:underline font-medium"
+                                            >
+                                                {item.referenceUrl}
+                                            </a>
+                                        ) : (
+                                            <span className="text-gray-400">-</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+</file>
+
+<file path="app/events/[id]/layout.tsx">
+// app/events/[id]/layout.tsx
+
+import { EventHeader } from "../components/EventHeader";
+import { EventTabNavigation } from "../components/EventTabNavigation";
+import { getEventById } from "../lib/mock-data";
+import { notFound } from "next/navigation";
+
+export default async function EventDetailLayout({
+    children,
+    params,
+}: {
+    children: React.ReactNode;
+    params: Promise<{ id: string }>; // 型定義を Promise とする。
+}) {
+
+    // params を await して id を取り出す
+    const { id } = await params;
+
+    // 取り出した id を使用する
+    const event = getEventById(id);
+
+    if (!event) {
+        notFound();
+    }
+
+    return (
+        <div className="flex-1 flex flex-col">
+            {/* イベントヘッダー（全タブ共通） */}
+            <EventHeader event={event} />
+
+            {/* タブナビゲーション（取り出したidを使用） */}
+            <EventTabNavigation eventId={id} />
+
+            {/* タブコンテンツ */}
+            <div className="flex-1 bg-white">
+                {children}
+            </div>
+        </div>
+    );
+}
+</file>
+
+<file path="app/events/[id]/notes/[noteId]/NoteDetailClient.tsx">
+// app/events/[id]/notes/[noteId]/NoteDetailClient.tsx
+
+"use client"
+
+import MarkdownViewer from "@/components/markdown/MarkdownViewer";
+import { formatDate } from "@/util/FormatDate";
+import Link from "next/link";
+import { MdOutlineArrowBack, MdEdit } from "react-icons/md";
+import type { EventNote } from "../../../lib/types";
+
+
+export function NoteDetailClient({ note, eventId }: { note: EventNote; eventId: string }) {
+
+    // カラーアクセント定義
+    const noteAccentColors = {
+        blue: {
+            border: "border-l-blue-400",
+            tag: "bg-blue-100 text-blue-700",
+        },
+        green: {
+            border: "border-l-green-400",
+            tag: "bg-green-100 text-green-700",
+        },
+        yellow: {
+            border: "border-l-yellow-400",
+            tag: "bg-yellow-100 text-yellow-700",
+        },
+        pink: {
+            border: "border-l-pink-400",
+            tag: "bg-pink-100 text-pink-700",
+        },
+        purple: {
+            border: "border-l-purple-400",
+            tag: "bg-purple-100 text-purple-700",
+        },
+        gray: {
+            border: "border-l-gray-300",
+            tag: "bg-gray-100 text-gray-600",
+        },
+    };
+
+    const colorKey = note.color || "gray";
+    const accentColor = noteAccentColors[colorKey];
+
+    return (
+        <div className="px-4 pt-6 pb-32">
+            <div className="max-w-4xl mx-auto">
+                {/* ページヘッダー */}
+                <div className="flex items-center justify-between pb-4 mb-6 border-b border-gray-200">
+                    {/* ページタイトル */}
+                    <h2 className="text-xl font-semibold text-gray-800">
+                        ノート
+                    </h2>
+                    {/* ツールボタン */}
+                    <div className="flex items-center gap-4">
+                        {/* 戻るボタン */}
+                        <Link href={`/events/${eventId}/notes`}
+                            className="flex items-center gap-2 px-3 py-1
+                                        text-sm font-medium text-gray-600 
+                                        bg-white border border-gray-200 rounded-lg
+                                        hover:bg-gray-50 hover:border-gray-300 ">
+                            <MdOutlineArrowBack className="w-4 h-4" />
+                            戻る
+                        </Link>
+                        {/* 編集ボタン */}
+                        <button onClick={() => alert("編集機能は未実装です")}
+                            className="flex items-center gap-2 px-3 py-1 
+                                        text-sm font-medium text-blue-600 
+                                        bg-blue-50 border border-blue-200 rounded-lg
+                                        hover:bg-blue-100 hover:border-blue-300">
+                            <MdEdit className="w-4 h-4" />
+                            編集
+                        </button>
+                    </div>
+                </div>
+
+                {/* ノート本体（全体の枠線なし） */}
+                <div className="bg-white">
+                    {/* ノートヘッダー */}
+                    <div className="mb-10">
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                            <div className="flex items-center gap-4">
+                                {/* 文書タイトル */}
+                                <h1 className={`text-xl font-semibold text-gray-800 flex-1 border-l-4 ${accentColor.border} pl-2`}>
+                                    {note.title}
+                                </h1>
+
+                                {/* タグ */}
+                                {note.category && (
+                                    <span className={`
+                                    text-sm px-3 py-0.5 rounded-md font-medium whitespace-nowrap
+                                    ${accentColor.tag}
+                                `}>
+                                        {note.category}
+                                    </span>
+                                )}
+                            </div>
+
+                        </div>
+
+                        {/* メタ情報 */}
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
+                            {note.author && (
+                                <span className="flex items-center gap-1">
+                                    <span className="font-medium text-gray-500">作成者:</span>
+                                    {note.author}
+                                </span>
+                            )}
+                            {note.editor && (
+                                <span className="flex items-center gap-1">
+                                    <span className="font-medium text-gray-500">編集者:</span>
+                                    {note.editor}
+                                </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                                <span className="font-medium text-gray-500">作成:</span>
+                                {formatDate(note.createdAt)}
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <span className="font-medium text-gray-500">更新:</span>
+                                {formatDate(note.updatedAt)}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* 本文 */}
+                    <div className="prose prose-sm max-w-none">
+                        <MarkdownViewer content={note.content || "（本文なし）"} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+</file>
+
+<file path="app/events/[id]/notes/[noteId]/page.tsx">
+// app/events/[id]/notes/[noteId]/page.tsx
+
+import { notFound } from "next/navigation";
+import { getEventById } from "../../../lib/mock-data";
+import { NoteDetailClient } from "./NoteDetailClient";
+
+// params の型定義に noteId を追加
+export default async function EventNoteDetailPage({
+    params
+}: {
+    params: Promise<{ id: string; noteId: string }>
+}) {
+    // 1. await で id と noteId を取り出す
+    const { id, noteId } = await params;
+
+    // 2. イベントを取得
+    const event = getEventById(id);
+
+    if (!event) {
+        notFound();
+    }
+
+    // 3. イベント内の notes 配列から、noteId が一致するものを探す
+    // (notesがundefinedの場合は空配列扱いで検索)
+    const note = (event.notes || []).find((n) => n.id === noteId);
+
+    // 4. ノートが見つからない場合は 404
+    if (!note) {
+        notFound();
+    }
+
+    // 5. 特定した note オブジェクトのみをクライアントコンポーネントに渡す
+    return <NoteDetailClient note={note} eventId={id} />;
+}
+</file>
+
+<file path="app/events/[id]/notes/NotesClient.tsx">
+// app/events/[id]/notes/NotesClient.tsx
+
+"use client"
+
+import { formatDate } from "@/util/FormatDate";
+import Link from "next/link";
+import type { EventWithRelations } from "../../lib/types";
+
+// ============================================================
+// メインコンポーネント
+// ============================================================
+
+export function NotesClient({ event }: { event: EventWithRelations }) {
+
+    // notes自体がundefinedの可能性も考慮して安全にアクセス
+    const notes = event.notes || [];
+
+    // カラーアクセント定義（左ボーダー + カテゴリタグ背景）
+    const noteAccentColors = {
+        blue: {
+            border: "border-l-blue-400",
+            tag: "bg-blue-100 text-blue-700",
+        },
+        green: {
+            border: "border-l-green-400",
+            tag: "bg-green-100 text-green-700",
+        },
+        yellow: {
+            border: "border-l-yellow-400",
+            tag: "bg-yellow-100 text-yellow-700",
+        },
+        pink: {
+            border: "border-l-pink-400",
+            tag: "bg-pink-100 text-pink-700",
+        },
+        purple: {
+            border: "border-l-purple-400",
+            tag: "bg-purple-100 text-purple-700",
+        },
+        gray: {
+            border: "border-l-gray-300",
+            tag: "bg-gray-100 text-gray-600",
+        },
+    };
+
+    return (
+        <div className="px-4 pt-6 pb-32">
+            <div className="max-w-4xl mx-auto space-y-4">
+                <h2 className="text-xl font-semibold text-gray-800">
+                    ノート一覧
+                </h2>
+                <hr className="border-gray-200 pb-2" />
+
+                {notes
+                    .sort((a, b) => a.order - b.order)
+                    .map((note) => {
+                        // カラー取得（未設定時はgray）
+                        const colorKey = note.color || "gray";
+                        const accentColor = noteAccentColors[colorKey];
+
+                        return (
+                            <Link
+                                key={note.id}
+                                href={`/events/${event.id}/notes/${note.id}`}
+                                className="block p-4 pl-6 rounded-lg bg-white border border-gray-200 hover:shadow-xs">
+                                {/* ヘッダー */}
+                                <div className="flex items-center gap-2 mb-2">
+                                    <h3 className={`font-semibold text-gray-800 flex-1 border-l-4 ${accentColor.border} pl-2`}>
+                                        {note.title}
+                                    </h3>
+                                    {note.category && (
+                                        <span className={`
+                                            text-xs px-2 py-1 rounded-md font-medium
+                                            ${accentColor.tag}
+                                        `}>
+                                            {note.category}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* プレビュー */}
+                                <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                                    {note.content || "（内容未記入）"}
+                                </p>
+
+                                {/* メタ情報 */}
+                                <div className="flex items-center gap-3 text-xs text-gray-500">
+                                    {note.author && (
+                                        <span className="flex items-center gap-1">
+                                            <span className="font-medium">作成者:</span>
+                                            {note.author}
+                                        </span>
+                                    )}
+                                    <span>{formatDate(note.createdAt)}</span>
+                                </div>
+                            </Link>
+                        );
+                    })}
+
+                {/* ノートがない場合 */}
+                {notes.length === 0 && (
+                    <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+                        <p className="text-gray-500">ノートが登録されていません</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+</file>
+
+<file path="app/events/[id]/notes/page.tsx">
+// app/events/[id]/notes/page.tsx
+
+import { notFound } from "next/navigation";
+import { getEventById } from "../../lib/mock-data";
+import { NotesClient } from "./NotesClient";
+
+export default async function EventNotesPage({
+    params
+}: {
+    params: Promise<{ id: string }>
+}) {
+    // 情報取得
+    const { id } = await params;
+    const event = getEventById(id);
+
+    if (!event) {
+        notFound();
+    }
+
+    return <NotesClient event={event} />
+}
+</file>
+
+<file path="app/events/[id]/tasks/page.tsx">
+// app/events/[id]/tasks/page.tsx
+
+import { notFound } from "next/navigation";
+import { getEventById } from "../../lib/mock-data";
+import { TasksClient } from "./TasksClient";
+
+
+export default async function EventTasksPage({
+    params
+}: {
+    params: Promise<{ id: string }>
+}) {
+    // 情報取得
+    const { id } = await params;
+    const event = getEventById(id);
+
+    if (!event) {
+        notFound();
+    }
+
+    return <TasksClient event={event} />
+}
+</file>
+
+<file path="app/events/[id]/tasks/TasksClient.tsx">
+// app/events/[id]/tasks/TasksClient.tsx
+
+"use client"
+
+import type { EventTask, EventWithRelations } from "../../lib/types";
+
+export function TasksClient({ event }: { event: EventWithRelations }) {
+
+    // tasksがundefinedの場合に備えて空配列をデフォルトに
+    const tasks = event.tasks || [];
+
+    return (
+        <div className="px-4 pt-6 pb-32">
+            <div className="max-w-4xl mx-auto space-y-4">
+                <h2 className="text-xl font-semibold text-gray-800">
+                    タスク一覧
+                </h2>
+                <hr className="border-gray-200 pb-2" />
+                {tasks.length > 0 ? (
+                    <TaskTable tasks={tasks} />
+                ) : (
+                    <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+                        <p className="text-gray-500">タスクが登録されていません</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// ============================================================
+// サブコンポーネント
+// ============================================================
+
+export function TaskTable({ tasks }: { tasks: EventTask[] }) {
+
+    // カテゴリ未設定時のラベル
+    const NO_CATEGORY_LABEL = "未分類";
+
+    // カテゴリごとにグループ化
+    const tasksByCategory = tasks.reduce(
+        (acc, task) => {
+            // カテゴリがない場合は「未分類」として扱う
+            const category = task.category || NO_CATEGORY_LABEL;
+
+            if (!acc[category]) {
+                acc[category] = [];
+            }
+            acc[category].push(task);
+            return acc;
+        },
+        {} as Record<string, EventTask[]>,
+    );
+
+    // 固定のカテゴリ表示順序
+    const defaultOrder = ["企画立案段階", "イベント内容・準備", "宣伝", "リハーサル", "本番（最終確認）"];
+
+    // 実際にデータが存在するカテゴリのキー一覧
+    const existingCategories = Object.keys(tasksByCategory);
+
+    // 表示順序の決定:
+    // 1. defaultOrder にあるものを先に表示
+    // 2. defaultOrder に含まれていないもの（"未分類"や"任意カテゴリ"）をその後に表示
+    const sortedCategories = [
+        ...defaultOrder.filter(cat => existingCategories.includes(cat)),
+        ...existingCategories.filter(cat => !defaultOrder.includes(cat))
+    ];
+
+    return (
+        <div className="space-y-6">
+            {sortedCategories.map((category) => (
+                <div key={category}>
+                    {/* カテゴリヘッダー */}
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3 px-1 border-l-4 border-gray-300 pl-2">
+                        {category}
+                    </h3>
+
+                    {/* タスクリスト */}
+                    <div className="space-y-2">
+                        {tasksByCategory[category]
+                            .sort((a, b) => a.order - b.order)
+                            .map((task) => (
+                                <div key={task.id} className="bg-white border border-gray-200 rounded-lg p-3 hover:border-gray-300 transition-colors">
+                                    <div className="flex items-start gap-3">
+                                        {/* チェックボックス */}
+                                        <input
+                                            type="checkbox"
+                                            checked={task.completed}
+                                            readOnly
+                                            className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                        />
+
+                                        {/* タスク情報 */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between gap-2 mb-1">
+                                                <h4 className={`text-sm font-medium ${task.completed ? "text-gray-400 line-through" : "text-gray-800"}`}>
+                                                    {task.name}
+                                                </h4>
+                                                {/* 期限がある場合のみ表示 */}
+                                                {task.deadline && (
+                                                    <span className={`text-xs whitespace-nowrap ${task.completed ? "text-gray-300" : "text-gray-800"}`}>
+                                                        期限: {new Date(task.deadline).toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" })}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-center gap-3 text-xs text-gray-500">
+                                                {/* 担当者: 未入力の場合は「未定」と表示 */}
+                                                <span className={!task.assignee ? "text-gray-300 bg-orange-50 px-1 rounded" : ""}>
+                                                    担当: {task.assignee || "未定"}
+                                                </span>
+
+                                                {/* メモがある場合のみ表示 */}
+                                                {task.memo && (
+                                                    <span className="text-gray-400 truncate max-w-[150px] sm:max-w-xs">
+                                                        {task.memo}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+</file>
+
+<file path="app/events/components/EventHeader.tsx">
+// app/events/components/EventHeader.tsx
+
+import Link from "next/link";
+import { MdLink, MdOutlineCalendarMonth, MdPeopleAlt, MdPinDrop, MdOutlineArrowBack } from "react-icons/md";
+import type { Event } from "../lib/types";
+
+// ============================================================
+// 【イベントヘッダー】
+// どのタブでも共通して表示される
+// ここに記載されている情報は直接編集しない。あくまで表示のみ
+// --> 基本情報タブ内で編集＆反映が原則
+// ============================================================
+
+export function EventHeader({ event }: { event: Event }) {
+
+    // カテゴリバッジの色
+    const categoryColor = event.category === "大イベント"
+        ? "bg-blue-100 text-blue-700"
+        : "bg-green-100 text-green-700";
+
+    // ステータスバッジの色
+    const statusColors: Record<string, string> = {
+        planning: "bg-yellow-100 text-yellow-700",   // アイデア・検討中
+        preparing: "bg-orange-100 text-orange-700",   // 動き始めている
+        in_progress: "bg-blue-100 text-blue-700",       // 実行中・注目
+        completed: "bg-green-100 text-green-700",     // 正常終了・達成
+        archived: "bg-gray-100 text-gray-500",       // 過去・保管
+    };
+
+    // ステータスラベル
+    const statusLabels: Record<string, string> = {
+        planning: "企画中",
+        preparing: "準備中",
+        in_progress: "開催中",
+        completed: "開催済み",
+        archived: "アーカイブ",
+    };
+
+    // ----------------------------------------------------------------
+    // 表示用データの安全な組み立て
+    // ----------------------------------------------------------------
+
+    // 日時情報の結合 (例: "2024-01-01 | 10:00～12:00" or "2024-01-01" or "10:00～")
+    const timeString = (event.startTime || event.endTime)
+        ? `${event.startTime || ""}～${event.endTime || ""}`
+        : "";
+
+    // 日付と時間を結合（片方が無くても変な区切り線が出ないようにfilterする）
+    const dateTimeDisplay = [event.date, timeString]
+        .filter((str) => str && str.trim() !== "") // 空文字やundefinedを除去
+        .join(" | ");
+
+    // 参加想定人数（値がなければ空文字）
+    const participantsDisplay = (event.expectedParticipants !== undefined && event.expectedParticipants !== null)
+        ? `参加想定: ${event.expectedParticipants}名`
+        : "";
+
+    return (
+        <div className="bg-white border-b border-gray-200 px-4 py-6">
+            <div className="max-w-6xl mx-auto">
+                {/* バッジ・戻るボタン */}
+                <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                        <span className={`inline-block px-3 py-1 rounded-lg text-xs font-semibold ${categoryColor}`}>
+                            {event.category}
+                        </span>
+                        <span className={`inline-block px-3 py-1 rounded-lg text-xs font-semibold ${statusColors[event.status]}`}>
+                            {statusLabels[event.status]}
+                        </span>
+                    </div>
+                    <Link href="/events">
+                        <MdOutlineArrowBack className="w-8 h-8 mr-2 text-gray-500 shrink-0" />
+                    </Link>
+                </div>
+
+                {/* イベント名 */}
+                <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                    {event.name}
+                </h1>
+
+                {/* 概要 (値がない場合は高さ0になるがエラーにはならない) */}
+                <p className="text-sm text-gray-600 mb-4 line-clamp-2 min-h-[1.25em]">
+                    {event.overview}
+                </p>
+
+                {/* メタ情報 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                    {/* 開催日時 */}
+                    <div className="flex items-center gap-2 min-h-6">
+                        <MdOutlineCalendarMonth className="w-5 h-5 text-gray-600 shrink-0" />
+                        <span className="text-gray-700">
+                            {dateTimeDisplay}
+                        </span>
+                    </div>
+
+                    {/* 開催場所 */}
+                    <div className="flex items-center gap-2 min-h-6">
+                        <MdPinDrop className="w-5 h-5 text-gray-600 shrink-0" />
+                        <span className="text-gray-700">
+                            {event.location}
+                        </span>
+                    </div>
+
+                    {/* 参加想定人数 */}
+                    <div className="flex items-center gap-2 min-h-6">
+                        <MdPeopleAlt className="w-5 h-5 text-gray-600 shrink-0" />
+                        <span className="text-gray-700">
+                            {participantsDisplay}
+                        </span>
+                    </div>
+
+                    {/* コアリンク (ここはURLがないとリンクが作れないため条件付き表示のまま) */}
+                    {event.coreReferenceUrl && (
+                        <div className="flex items-center gap-2 min-h-6">
+                            <MdLink className="w-5 h-5 text-gray-600 shrink-0" />
+                            <Link className="text-blue-600 truncate" target="_blank" href={event.coreReferenceUrl.url}>
+                                {event.coreReferenceUrl.label}
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+</file>
+
+<file path="app/events/components/EventTabNavigation.tsx">
+// app/events/components/EventTabNavigation.tsx
+
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+export function EventTabNavigation({ eventId }: { eventId: string }) {
+    const pathname = usePathname();
+
+    const tabs = [
+        { label: "基本情報", path: `/events/${eventId}/basic` },
+        { label: "イベント内容", path: `/events/${eventId}/content` },
+        { label: "タスク", path: `/events/${eventId}/tasks` },
+        { label: "備品 / 景品", path: `/events/${eventId}/items/equipment` }, // 初期値
+        { label: "ノート", path: `/events/${eventId}/notes` },
+    ];
+
+    return (
+        <nav className="bg-white border-b border-gray-200 overflow-x-auto">
+            <div className="max-w-6xl px-4 mx-auto">
+                <div className="flex justify-around gap-6">
+                    {tabs.map((tab) => {
+                        const isActive =
+                            tab.label === "備品 / 景品"
+                                ? pathname.startsWith(`/events/${eventId}/items`)
+                                : pathname === tab.path;
+                        return (
+                            <Link
+                                key={tab.path}
+                                href={tab.path}
+                                className={`
+                                    py-3 px-1 text-sm font-medium whitespace-nowrap
+                                    w-full text-center
+                                    border-b-2 transition-colors
+                                    ${isActive ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}
+                                `}
+                            >
+                                {tab.label}
+                            </Link>
+                        );
+                    })}
+                </div>
+            </div>
+        </nav>
+    );
+}
+</file>
+
+<file path="app/events/EventClient.tsx">
+// app/events/EventClient.tsx
+
+"use client"
+
+import Link from "next/link";
+import { MdChevronRight, MdOutlineCalendarMonth, MdPinDrop } from "react-icons/md";
+import type { Event } from "./lib/types";
+
+// ============================================================
+// メインコンポーネント
+// ============================================================
+
+export function EventsClient({ events }: { events: Event[] }) {
+
+    // 配列が未定義の場合のガード
+    const eventList = events || [];
+
+    return (
+        <div className="flex-1 px-4 py-6">
+            <div className="max-w-6xl mx-auto">
+                {/* ページヘッダー */}
+                <div className="pb-2 mb-8 border-b border-gray-200">
+                    <h1 className="text-xl font-bold text-gray-800 pb-1">イベント管理</h1>
+                    <p className="text-sm text-gray-600">イベント情報を総合的に管理します</p>
+                </div>
+
+                {/* イベント一覧 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {eventList.map((event) => (
+                        <EventCard key={event.id} event={event} />
+                    ))}
+                </div>
+
+                {/* イベントがない場合 */}
+                {eventList.length === 0 && (
+                    <div className="text-center py-12">
+                        <p className="text-gray-500">イベントがありません</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+
+// ============================================================
+// サブコンポーネント
+// ============================================================
+
+
+export function EventCard({ event }: { event: Event }) {
+
+    // カテゴリバッジの色
+    const categoryColor = event.category === "大イベント" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700";
+
+    // ステータスバッジの色
+    const statusColors: Record<string, string> = {
+        planning: "bg-yellow-100 text-yellow-700",   // アイデア・検討中
+        preparing: "bg-orange-100 text-orange-700",   // 動き始めている
+        in_progress: "bg-blue-100 text-blue-700",       // 実行中・注目
+        completed: "bg-green-100 text-green-700",     // 正常終了・達成
+        archived: "bg-gray-100 text-gray-500",       // 過去・保管
+    };
+
+    // ステータスラベル（型定義のstatusすべてに対応）
+    const statusLabels: Record<string, string> = {
+        planning: "企画中",
+        preparing: "準備中",
+        in_progress: "開催中",
+        completed: "開催済み",
+        archived: "アーカイブ",
+    };
+
+    // ----------------------------------------------------------------
+    // 表示用データの安全な組み立て
+    // ----------------------------------------------------------------
+
+    // 日時情報の結合
+    const timeString = (event.startTime || event.endTime)
+        ? `${event.startTime || ""}～${event.endTime || ""}`
+        : "";
+
+    // 日付と時間を結合（値があるものだけ繋ぐ）
+    const dateTimeDisplay = [event.date, timeString]
+        .filter((str) => str && str.trim() !== "")
+        .join(" ");
+
+    // 日時が全くない場合の表示
+    const finalDateTime = dateTimeDisplay || "日時未定";
+
+    // 場所がない場合の表示
+    const locationDisplay = event.location || "場所未定";
+
+    return (
+        <Link href={`/events/${event.id}/basic`} className="block bg-white border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-sm transition-all group h-full">
+            {/* ヘッダー */}
+            <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2">
+                    <span className={`inline-block px-2 py-1 rounded-md text-xs font-semibold ${categoryColor}`}>{event.category}</span>
+                    <span className={`inline-block px-3 py-1 rounded-lg text-xs font-semibold ${statusColors[event.status]}`}>{statusLabels[event.status]}</span>
+                </div>
+                <MdChevronRight className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+
+            {/* イベント名 */}
+            <h3 className="text-lg font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">
+                {event.name}
+            </h3>
+
+            {/* 概要 (値がない場合も高さを維持してレイアウト崩れを防ぐ) */}
+            <p className="text-sm text-gray-600 mb-2 line-clamp-2 min-h-[2.5em]">
+                {event.overview || <span className="text-gray-400 italic">概要未設定</span>}
+            </p>
+
+            {/* メタ情報 (カード下部に寄せる) */}
+            <div className="mt-auto flex flex-col gap-1 text-xs text-gray-500">
+                <div className="flex items-center gap-2">
+                    <MdOutlineCalendarMonth className="w-4 h-4 shrink-0" />
+                    <span className="truncate">
+                        {finalDateTime}
+                    </span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <MdPinDrop className="w-4 h-4 shrink-0" />
+                    <span className="truncate">
+                        {locationDisplay}
+                    </span>
+                </div>
+            </div>
+        </Link>
+    );
+}
+</file>
+
+<file path="app/events/lib/mock-data.ts">
+// app/events/lib/mock-data.ts
+
+import type { Event, EventContent, EventEquipment, EventPrize, EventTask, EventNote, EventWithRelations } from "./types";
+
+// ============================================================
+// ヘルパー関数
+// ============================================================
+
+// IDでイベントを取得（※模擬的）
+export function getEventById(id: string): EventWithRelations | null {
+    const allEvents = [mockEventWithRelations, mockEventCircleRallyWithRelations];
+    return allEvents.find((event) => event.id === id) || null;
+}
+
+// 全イベント一覧を取得（※模擬的）
+export function getAllEvents(): Event[] {
+    return [mockEvent, mockEventCircleRally];
+}
+
+
+// ============================================================
+// モックデータ: 春の交流会
+// ============================================================
+
+export const mockEvent: Event = {
+    id: "event-001",
+    name: "2026年度 春の交流会",
+    category: "大イベント",
+    status: "planning",
+
+    // コアURL
+    coreReferenceUrl: {
+        "label": "Google Drive",
+        "url": "https://drive.google.com/drive/u/0/folders/1ZvjJy1GHA5bFyIRZroC3_7du4b-k_-TT"
+    },
+
+    // 基本情報
+    purpose: "自由ヶ丘キャンパスのサークル活動を活発にするため。当企画を通して他学年の垣根を超え、より充実した大学生活を送ってもらうことを目指す。",
+    overview: "新入生と在学生が交流するイベント。ゲームやビンゴ大会を通じて親睦を深める。",
+    location: "自由ヶ丘キャンパス311教室",
+    date: "2026-04-22", // 文字列で扱う
+    startTime: "16:30",
+    endTime: "18:00",
+    prepTime: "16:10",
+
+    targetAudience: "・経営情報システム専攻の学生\n・1年生\n・2年生",
+    expectedParticipants: 40,
+    budget: 160000,
+
+    promotionMethods: "・L-Cam(学内連絡)\n・Instagram\n・X公式LINE\n・ビラ",
+    roles: {
+        "司会": "山田",
+        "副司会": "佐藤",
+        "受付": "後藤",
+        "ゲームマスター": "鈴木・伊藤・近藤",
+    },
+
+    timeTable: {
+        "16:10": "講義終了・イベント準備開始",
+        "16:20": "参加者入場・受付開始",
+        "16:30": "イベント開始",
+        "16:35": "企画1「共通点探しゲーム」実施",
+        "16:45": "企画2「ito」実施",
+        "17:00": "企画3「NGワードゲーム」実施",
+        "17:20": "企画4「ビンゴ大会」実施",
+        "18:00": "イベント準備開始",
+    },
+
+    referenceUrls: {
+        "GoogleDrive": "https://drive.google.com/drive/u/0/folders/1ZvjJy1GHA5bFyIRZroC3_7du4b-k_-TT",
+        "1月14日議事録": "https://docs.google.com/document/d/1WiomC7XKo4ZHq15TDtEsCcHUM4Avf5T2DGm5-jYmBNU/edit?usp=sharing"
+    },
+
+    // メモ欄（Markdown対応）
+    memo: "# 任意メモ欄\n## 見出し2",
+
+    createdAt: new Date("2026-02-01"),
+    updatedAt: new Date("2026-03-15"),
+};
+
+// ------------------------------------------------------------
+// イベント内容（企画）
+// ------------------------------------------------------------
+
+export const mockEventContents: EventContent[] = [
+    {
+        id: "content-001",
+        eventId: "event-001",
+        order: 1,
+
+        name: "共通点探しゲーム",
+        overview: "「共通点探しゲーム」は、特別な道具もいらず、初対面の緊張を解く（アイスブレイク）のに最適な企画です。",
+        description: "・グループ内で全員が一致する共通点が1つにつき1点\n・（ホワイトボードに記述）\n・一番共通点が多かったチームが勝利",
+        flow: "・ルール説明（2分程度）\n・話し合い（6分程度）\n・結果発表（2分程度）",
+
+        equipment: "・各グループにペン1～2本\n・各グループにホワイトボードを1枚\n・タイマー",
+        referenceUrls: ["https://example.com"],
+
+        createdAt: new Date("2026-02-10"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "content-002",
+        eventId: "event-001",
+        order: 2,
+
+        name: "ito",
+        overview: "「ito（イト）」は、価値観のズレを楽しむゲーム。新入生同士が「この人、自分と感覚が似てる！」と感じたり、「そんな考え方があるんだ！」と驚いたりするのに最適なゲーム。",
+        description: "・各グループで1～100の数字カードを1人1枚配布\n・お題（例: 食べものの人気度）を設定\n・自分の数字について「数字を言わずに」お題に沿った言葉で表現していく。（1が最低～100が最高）\n・全員の表現を聞き、数字が小さいと思う順にカードを場に伏せて出す。\n・カードを表にしたとき、小さい順に並んでいたら成功。",
+        flow: "1. ルール説明とデモ（3分）\n2. ゲーム3回実施（10分）\n3. 振り返り（2分）",
+
+        equipment: "・ito(市販)\n・お題表示スライド",
+        referenceUrls: ["https://example.com"],
+
+        createdAt: new Date("2026-02-10"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "content-003",
+        eventId: "event-001",
+        order: 3,
+
+        name: "NGワードゲーム",
+        overview: "自分に割り当てられた「NGワード」を知らないまま会話を進め、最後までその言葉を言わずに生き残るゲーム。",
+        description: "各参加者にNGワードを配布し、相手のNGワードを引き出すよう会話を行う。最後まで残っている人が勝利。",
+        flow: "1. 各参加者にNGワードを配布\n2. ゲーム開始\n   4分間、相手のNGワードを引き出すよう会話を行う\n3. ゲーム終了\n   最後まで残っている人が勝利\n\n（1～3を3回程度繰り返す）",
+
+        equipment: "・参加者に割り当てるNGワードの札\n・タイマー",
+        referenceUrls: ["https://example.com"],
+
+        createdAt: new Date("2026-02-10"),
+        updatedAt: new Date("2026-03-01"),
+    },
+];
+
+// ------------------------------------------------------------
+// タスク
+// ------------------------------------------------------------
+
+export const mockEventTasks: EventTask[] = [
+    // 企画立案段階
+    {
+        id: "task-001",
+        eventId: "event-001",
+        category: "企画立案段階",
+        name: "企画案出し",
+        deadline: new Date("2026-02-19"),
+        assignee: "全員",
+        completed: true,
+        memo: undefined,
+        order: 1,
+        createdAt: new Date("2026-02-01"),
+        updatedAt: new Date("2026-02-20"),
+    },
+    {
+        id: "task-002",
+        eventId: "event-001",
+        category: "企画立案段階",
+        name: "景品決定",
+        deadline: new Date("2026-02-24"),
+        assignee: "全員",
+        completed: true,
+        memo: undefined,
+        order: 2,
+        createdAt: new Date("2026-02-01"),
+        updatedAt: new Date("2026-02-25"),
+    },
+    {
+        id: "task-003",
+        eventId: "event-001",
+        category: "企画立案段階",
+        name: "企画書作成",
+        deadline: new Date("2026-02-28"),
+        assignee: "山田",
+        completed: false,
+        memo: undefined,
+        order: 3,
+        createdAt: new Date("2026-02-01"),
+        updatedAt: new Date("2026-02-15"),
+    },
+
+    // イベント内容・準備
+    {
+        id: "task-004",
+        eventId: "event-001",
+        category: "イベント内容・準備",
+        name: "進行スライド作成",
+        deadline: new Date("2026-03-14"),
+        assignee: "佐藤",
+        completed: false,
+        memo: undefined,
+        order: 1,
+        createdAt: new Date("2026-02-15"),
+        updatedAt: new Date("2026-02-15"),
+    },
+    {
+        id: "task-005",
+        eventId: "event-001",
+        category: "イベント内容・準備",
+        name: "ito ルール詳細",
+        deadline: new Date("2026-03-10"),
+        assignee: "鈴木",
+        completed: false,
+        memo: undefined,
+        order: 2,
+        createdAt: new Date("2026-02-15"),
+        updatedAt: new Date("2026-02-15"),
+    },
+    {
+        id: "task-006",
+        eventId: "event-001",
+        category: "イベント内容・準備",
+        name: "景品購入",
+        deadline: new Date("2026-03-16"),
+        assignee: "全員（行ける人）",
+        completed: false,
+        memo: undefined,
+        order: 3,
+        createdAt: new Date("2026-02-20"),
+        updatedAt: new Date("2026-02-20"),
+    },
+
+    // 宣伝
+    {
+        id: "task-007",
+        eventId: "event-001",
+        category: "宣伝",
+        name: "宣伝用ビラ作成",
+        deadline: new Date("2026-03-10"),
+        assignee: "後藤",
+        completed: true,
+        memo: undefined,
+        order: 1,
+        createdAt: new Date("2026-02-20"),
+        updatedAt: new Date("2026-03-11"),
+    },
+    {
+        id: "task-008",
+        eventId: "event-001",
+        category: "宣伝",
+        name: "SNS発信準備",
+        deadline: new Date("2026-03-10"),
+        assignee: "近藤",
+        completed: false,
+        memo: undefined,
+        order: 2,
+        createdAt: new Date("2026-02-20"),
+        updatedAt: new Date("2026-02-20"),
+    },
+
+    // リハーサル
+    {
+        id: "task-009",
+        eventId: "event-001",
+        category: "リハーサル",
+        name: "3月16日リハーサル①",
+        deadline: new Date("2026-03-30"),
+        assignee: "全員",
+        completed: false,
+        memo: undefined,
+        order: 1,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+
+    // 本番（最終確認）
+    {
+        id: "task-010",
+        eventId: "event-001",
+        category: "本番（最終確認）",
+        name: "備品確認",
+        deadline: new Date("2026-04-15"),
+        assignee: "伊藤",
+        completed: false,
+        memo: undefined,
+        order: 1,
+        createdAt: new Date("2026-03-15"),
+        updatedAt: new Date("2026-03-15"),
+    },
+];
+
+// ------------------------------------------------------------
+// 備品
+// ------------------------------------------------------------
+
+export const mockEventEquipment: EventEquipment[] = [
+    {
+        id: "equipment-001",
+        eventId: "event-001",
+        order: 1,
+        itemName: "ペン 5本",
+        purpose: "受付用",
+        purchaseStatus: "inStock",
+        price: undefined,
+        note: undefined,
+        referenceUrl: undefined,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "equipment-002",
+        eventId: "event-001",
+        order: 2,
+        itemName: "ホワイトボード 6枚",
+        purpose: "共通点探しゲーム用",
+        purchaseStatus: "inStock",
+        price: undefined,
+        note: "グループ数分",
+        referenceUrl: undefined,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "equipment-003",
+        eventId: "event-001",
+        order: 3,
+        itemName: "タイマー 2個",
+        purpose: "ゲーム進行用",
+        purchaseStatus: "inStock",
+        price: undefined,
+        note: undefined,
+        referenceUrl: undefined,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "equipment-004",
+        eventId: "event-001",
+        order: 4,
+        itemName: "ito（市販ゲーム） 1セット",
+        purpose: "ゲーム実施用",
+        purchaseStatus: "required",
+        price: 2800,
+        note: undefined,
+        referenceUrl: "https://example.com",
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+];
+
+// ------------------------------------------------------------
+// 景品
+// ------------------------------------------------------------
+
+export const mockEventPrizes: EventPrize[] = [
+    {
+        id: "prize-001",
+        eventId: "event-001",
+        order: 1,
+        itemName: "iPad",
+        estimatedPrice: 58800,
+        actualPrice: undefined,
+        category: "大景品",
+        storeCandidates: "家電量販店",
+        description: "新入生にとって需要しかない。",
+        referenceUrl: "https://example.co.jp",
+        proposedBy: "佐藤",
+        createdAt: new Date("2026-02-24"),
+        updatedAt: new Date("2026-02-24"),
+    },
+    {
+        id: "prize-002",
+        eventId: "event-001",
+        order: 2,
+        itemName: "ワイヤレスイヤホン",
+        estimatedPrice: 6600,
+        actualPrice: undefined,
+        category: "中景品",
+        storeCandidates: "家電量販店",
+        description: "",
+        referenceUrl: "https://example.co.jp",
+        proposedBy: "後藤",
+        createdAt: new Date("2026-02-24"),
+        updatedAt: new Date("2026-02-24"),
+    },
+    {
+        id: "prize-003",
+        eventId: "event-001",
+        order: 3,
+        itemName: "入浴剤",
+        estimatedPrice: 2000,
+        actualPrice: undefined,
+        category: "小景品",
+        storeCandidates: "雑貨店",
+        description: "お風呂時間をもっと楽しく",
+        referenceUrl: undefined,
+        proposedBy: "山田",
+        createdAt: new Date("2026-02-24"),
+        updatedAt: new Date("2026-02-24"),
+    },
+];
+
+// ------------------------------------------------------------
+// ノート
+// ------------------------------------------------------------
+
+export const mockEventNotes: EventNote[] = [
+    {
+        id: "note-001",
+        eventId: "event-001",
+        order: 1,
+        title: "L-Cam発信内容",
+        content: "# 春の交流会のお知らせ\n\n4月22日(火)16:30より...",
+        category: "宣伝",
+        color: "blue",
+        author: "山田",
+        editor: undefined,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "note-002",
+        eventId: "event-001",
+        order: 2,
+        title: "リハーサル振り返り",
+        content: "## 良かった点\n- 進行がスムーズ\n\n## 改善点\n- タイマーの音量が小さい",
+        category: "振り返り",
+        color: "yellow",
+        author: undefined, // 匿名
+        editor: undefined,
+        createdAt: new Date("2026-03-16"),
+        updatedAt: new Date("2026-03-16"),
+    },
+    {
+        id: "note-003",
+        eventId: "event-001",
+        order: 3,
+        title: "Instagram投稿文案",
+        content: "春の交流会、開催決定🌸\n...",
+        category: "SNS",
+        color: "pink",
+        author: "佐藤",
+        editor: "鈴木",
+        createdAt: new Date("2026-03-10"),
+        updatedAt: new Date("2026-03-12"),
+    },
+];
+
+// ------------------------------------------------------------
+// 全データを結合
+// ------------------------------------------------------------
+
+export const mockEventWithRelations: EventWithRelations = {
+    ...mockEvent,
+    contents: mockEventContents,
+    tasks: mockEventTasks,
+    equipment: mockEventEquipment,
+    prizes: mockEventPrizes,
+    notes: mockEventNotes,
+};
+
+
+// ============================================================
+// モックデータ: サークルラリー
+// ============================================================
+
+export const mockEventCircleRally: Event = {
+    id: "event-002",
+    name: "2026年度 サークルラリー",
+    category: "大イベント",
+    status: "preparing",
+
+    // コアURL
+    coreReferenceUrl: {
+        "label": "Google Drive",
+        "url": "https://drive.google.com/drive/u/0/folders/1TPYLZaIWUomcVFPrCcsUrxdg5-kQaE-V"
+    },
+
+    // 基本情報
+    purpose: "自由ヶ丘キャンパスのサークル活動を活発にするため。ひいては自由ヶ丘キャンパスの活性化および学生間の交流を促進するため。",
+    overview: "サークルがブース形式で新入生に活動を紹介するイベント。巡回形式で全サークルを回った後、自由に気になるサークルのブースを訪問できる。",
+    location: "自由ヶ丘キャンパス311教室",
+    date: "4月中旬（講義時間割確定後決定）",
+    startTime: "16:30",
+    endTime: "18:00",
+    prepTime: "16:10",
+
+    targetAudience: "・新一年生 → メインターゲット層\n・新二年生 → 一年生の時に入り損ねた人への機会提供",
+    expectedParticipants: 40,
+    budget: 13800,
+
+    promotionMethods: "・L-Cam\n・SNS（インスタ、X、LINE）\n・1年生セミナーのタイミング\n・ビラ（1種類、セミナーで配る）\n・イベント当日にキャンパスの出入口で口頭宣伝",
+
+    roles: {
+        "会場司会": "田中",
+        "受付": "中村",
+        "食堂前宣伝": "高橋・小林",
+        "進行管理": "伊藤",
+    },
+
+    timeTable: {
+        "16:10": "サークル集合、必要事項の説明、ブース用意開始 / 食堂前宣伝開始",
+        "16:20": "参加者入場・受付開始",
+        "16:30": "イベント開始（会場司会による説明＆諸注意等）",
+        "16:35": "巡回形式でサークルを見ていく",
+        "17:25": "ブース形式（自由）でサークルを見ていく",
+        "18:00": "イベント終了・撤収・解散",
+    },
+
+    referenceUrls: {
+        "昨年度サークル担当者アンケート": "https://docs.google.com/forms/d/1blcZhm4TsvkPwRANhMh2vcEVuk8RAu2rG8d8bF4cqu4/edit#responses",
+        "昨年度参加者アンケート": "https://docs.google.com/forms/d/1z4qP0pf7s632kgbYT-r5WuADT5YYADD6D6zgDED33p4/edit#responses"
+    },
+
+    memo: "# 参加サークル候補（計10サークル）\n\n・自由ヶ丘ボードゲームサークル\n・e-Sports Community Circle\n・Community Circle Hill's\n・AIT 株式研究会～Beckoning Cat～\n・自由ヶ丘執行委員会（学友会）\n・アイデアクリエイターズ（クラブ会未所属）\n・自由ヶ丘サウナサークル SPREAT\n・なんくるないサークル（活動実態不明）\n・SDGs推進チーム（学生チャレンジプロジェクト）\n・会計勉強会（新規サークル）\n\n※開催日が未定のため、予定によっては参加できないサークルが出てくる可能性あり。\n※評議会の承認後に各サークルへ連絡し、イベントの詳細説明と併せて参加の確認をとる。",
+
+    createdAt: new Date("2026-02-10"),
+    updatedAt: new Date("2026-03-01"),
+};
+
+// ------------------------------------------------------------
+// イベント内容（企画）
+// ------------------------------------------------------------
+
+export const mockEventCircleRallyContents: EventContent[] = [
+    {
+        id: "content-004",
+        eventId: "event-002",
+        order: 1,
+
+        name: "巡回形式によるサークル紹介",
+        overview: "参加者をグループに分け、時間を区切って全サークルのブースを順番に体験する形式。各サークル5分間で活動内容をPRする。",
+        description: "・1回あたり5分でサークルについて紹介・PRをしてもらう\n・5分終了後、参加者は次のサークルへ移動（全サークル回り終わるまで繰り返す）\n・5分以内であればPR方法は自由\n・このタイミングで入部に関わる手続きはしない（機会を等しくするため）",
+        flow: "1. 受付開始後、集まった参加者を均等にグループに分ける\n2. 最初に説明を受けるサークルのブースの椅子に座ってもらう\n3. 執行委員の指示に従い、順番にブースを回っていく\n4. 全サークルを回り終えるまで繰り返す（所要時間: 約50分）",
+
+        equipment: "・ブース用机・椅子（サークル数分）\n・タイマー\n・進行用スライド（中央スクリーン使用）",
+        referenceUrls: undefined,
+        memo: "【所要時間計算】\n- 基本時間: 5分 × 9サークル = 45分\n- 移動時間: 20秒 × 8回 = 2分40秒\n- 休憩時間: 2分 × 1回 = 2分\n- 合計 49分40秒 ≒ 50分\n\n※2026年度は7サークル参加、1回4分だったが紹介時間が短かったとの声があったため今年は5分に変更",
+
+        createdAt: new Date("2026-02-15"),
+        updatedAt: new Date("2026-02-28"),
+    },
+    {
+        id: "content-005",
+        eventId: "event-002",
+        order: 2,
+
+        name: "ブース形式による自由見学・入部手続き",
+        overview: "イベント終了時刻まで、参加者が自由に気になったサークルのブースへ行き、詳しい話を聞いたり入部手続きを行ったりできる時間。",
+        description: "・参加者は自由に気になったサークルのブースへ行ける\n・PR内容も自由（体験企画なども可）\n・入部手続き可能\n・参加者は途中退出可能（アンケート回答後）\n・サークル側も運営側に一声あれば途中撤収可能",
+        flow: "1. 巡回形式終了後、ブース形式へ移行（17:25～）\n2. 参加者は自由にサークルブースを訪問\n3. イベント終了時刻（18:00）まで継続\n4. 退出時に参加者アンケート回答\n5. 撤収・解散",
+
+        equipment: "・参加者アンケート用紙・QRコード\n・参加賞（図書カード or ビンゴカード）\n・サークル関係者向け飲み物",
+        referenceUrls: undefined,
+        memo: "※時間を活かして説明以外にもその場で体験できることをやってもよい\n※ブースの範囲内であれば、ビラ等配布物も許可（311教室外で配布する際は事務室で申請が必要）",
+
+        createdAt: new Date("2026-02-15"),
+        updatedAt: new Date("2026-02-28"),
+    },
+];
+
+// ------------------------------------------------------------
+// タスク
+// ------------------------------------------------------------
+
+export const mockEventCircleRallyTasks: EventTask[] = [
+    // 企画立案段階
+    {
+        id: "task-011",
+        eventId: "event-002",
+        category: "企画立案段階",
+        name: "企画書作成",
+        deadline: new Date("2026-02-20"),
+        assignee: "田中",
+        completed: true,
+        memo: undefined,
+        order: 1,
+        createdAt: new Date("2026-02-01"),
+        updatedAt: new Date("2026-02-21"),
+    },
+    {
+        id: "task-012",
+        eventId: "event-002",
+        category: "企画立案段階",
+        name: "評議会への提出・承認",
+        deadline: new Date("2026-02-28"),
+        assignee: "田中",
+        completed: false,
+        memo: undefined,
+        order: 2,
+        createdAt: new Date("2026-02-01"),
+        updatedAt: new Date("2026-02-15"),
+    },
+    {
+        id: "task-013",
+        eventId: "event-002",
+        category: "企画立案段階",
+        name: "講義時間割確定後、開催日確定",
+        deadline: new Date("2026-03-31"),
+        assignee: "全員",
+        completed: false,
+        memo: "4月中旬を想定",
+        order: 3,
+        createdAt: new Date("2026-02-01"),
+        updatedAt: new Date("2026-02-15"),
+    },
+
+    // イベント内容・準備
+    {
+        id: "task-014",
+        eventId: "event-002",
+        category: "イベント内容・準備",
+        name: "各サークルへ連絡・参加確認",
+        deadline: new Date("2026-03-15"),
+        assignee: "中村",
+        completed: false,
+        memo: "評議会承認後に実施",
+        order: 1,
+        createdAt: new Date("2026-02-20"),
+        updatedAt: new Date("2026-02-20"),
+    },
+    {
+        id: "task-015",
+        eventId: "event-002",
+        category: "イベント内容・準備",
+        name: "会場レイアウト図作成",
+        deadline: new Date("2026-03-20"),
+        assignee: "伊藤",
+        completed: false,
+        memo: "311教室のブース配置を決定",
+        order: 2,
+        createdAt: new Date("2026-02-20"),
+        updatedAt: new Date("2026-02-20"),
+    },
+    {
+        id: "task-016",
+        eventId: "event-002",
+        category: "イベント内容・準備",
+        name: "進行用スライド作成",
+        deadline: new Date("2026-04-05"),
+        assignee: "田中",
+        completed: false,
+        memo: "中央スクリーン用",
+        order: 3,
+        createdAt: new Date("2026-02-20"),
+        updatedAt: new Date("2026-02-20"),
+    },
+    {
+        id: "task-017",
+        eventId: "event-002",
+        category: "イベント内容・準備",
+        name: "参加者アンケート・サークルアンケート作成",
+        deadline: new Date("2026-04-05"),
+        assignee: "高橋",
+        completed: false,
+        memo: "Google Form使用",
+        order: 4,
+        createdAt: new Date("2026-02-20"),
+        updatedAt: new Date("2026-02-20"),
+    },
+    {
+        id: "task-018",
+        eventId: "event-002",
+        category: "イベント内容・準備",
+        name: "参加賞（図書カード）購入",
+        deadline: new Date("2026-04-10"),
+        assignee: "小林",
+        completed: false,
+        memo: "500円×20枚（去年度購入分15枚から補充）",
+        order: 5,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "task-019",
+        eventId: "event-002",
+        category: "イベント内容・準備",
+        name: "サークル関係者向け飲み物購入",
+        deadline: new Date("2026-04-14"),
+        assignee: "中村",
+        completed: false,
+        memo: "15人分想定",
+        order: 6,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+
+    // 宣伝
+    {
+        id: "task-020",
+        eventId: "event-002",
+        category: "宣伝",
+        name: "宣伝用ビラ作成",
+        deadline: new Date("2026-04-01"),
+        assignee: "高橋",
+        completed: false,
+        memo: "1種類、1年生セミナーで配布",
+        order: 1,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "task-021",
+        eventId: "event-002",
+        category: "宣伝",
+        name: "L-Cam掲載依頼",
+        deadline: new Date("2026-04-05"),
+        assignee: "田中",
+        completed: false,
+        memo: undefined,
+        order: 2,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "task-022",
+        eventId: "event-002",
+        category: "宣伝",
+        name: "SNS発信（インスタ・X・LINE）",
+        deadline: new Date("2026-04-10"),
+        assignee: "小林",
+        completed: false,
+        memo: undefined,
+        order: 3,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+
+    // リハーサル
+    {
+        id: "task-023",
+        eventId: "event-002",
+        category: "リハーサル",
+        name: "事前リハーサル・最終確認",
+        deadline: new Date("2026-04-14"),
+        assignee: "全員",
+        completed: false,
+        memo: "進行確認、役割分担確認",
+        order: 1,
+        createdAt: new Date("2026-03-15"),
+        updatedAt: new Date("2026-03-15"),
+    },
+
+    // 本番（最終確認）
+    {
+        id: "task-024",
+        eventId: "event-002",
+        category: "本番（最終確認）",
+        name: "備品最終確認",
+        deadline: new Date("2026-04-15"),
+        assignee: "伊藤",
+        completed: false,
+        memo: "当日朝に実施",
+        order: 1,
+        createdAt: new Date("2026-04-01"),
+        updatedAt: new Date("2026-04-01"),
+    },
+    {
+        id: "task-025",
+        eventId: "event-002",
+        category: "本番（最終確認）",
+        name: "各サークルへ当日連絡事項送付",
+        deadline: new Date("2026-04-14"),
+        assignee: "中村",
+        completed: false,
+        memo: "集合時刻・持ち物・注意事項等",
+        order: 2,
+        createdAt: new Date("2026-04-01"),
+        updatedAt: new Date("2026-04-01"),
+    },
+];
+
+// ------------------------------------------------------------
+// 備品
+// ------------------------------------------------------------
+
+export const mockEventCircleRallyEquipment: EventEquipment[] = [
+    {
+        id: "equipment-005",
+        eventId: "event-002",
+        order: 1,
+        itemName: "図書カード 500円 x 20枚",
+        purpose: "参加賞（アンケート回答特典）",
+        purchaseStatus: "required",
+        price: 10000,
+        note: "去年度購入分15枚から補充する形",
+        referenceUrl: undefined,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "equipment-006",
+        eventId: "event-002",
+        order: 2,
+        itemName: "ビンゴカード x 20枚",
+        purpose: "参加賞（アンケート回答特典・選択肢2）",
+        purchaseStatus: "inStock",
+        price: undefined,
+        note: "既存のもので対応（イベント終了後追加購入）",
+        referenceUrl: undefined,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "equipment-007",
+        eventId: "event-002",
+        order: 3,
+        itemName: "飲み物 15人分",
+        purpose: "サークル関係者への提供",
+        purchaseStatus: "required",
+        price: 1800,
+        note: "サークル側の人数確認後に購入",
+        referenceUrl: undefined,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "equipment-008",
+        eventId: "event-002",
+        order: 4,
+        itemName: "印刷用紙・インク等",
+        purpose: "ビラ印刷、アンケート印刷等",
+        purchaseStatus: "required",
+        price: 2000,
+        note: "交通費含む",
+        referenceUrl: undefined,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "equipment-009",
+        eventId: "event-002",
+        order: 5,
+        itemName: "ブース用机・椅子",
+        purpose: "各サークルブース設営",
+        purchaseStatus: "inStock",
+        price: undefined,
+        note: "311教室備品を使用（サークル数分）",
+        referenceUrl: undefined,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "equipment-010",
+        eventId: "event-002",
+        order: 6,
+        itemName: "タイマー 2個",
+        purpose: "巡回形式の時間管理",
+        purchaseStatus: "inStock",
+        price: undefined,
+        note: undefined,
+        referenceUrl: undefined,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "equipment-011",
+        eventId: "event-002",
+        order: 7,
+        itemName: "受付用名簿・筆記用具",
+        purpose: "参加者受付",
+        purchaseStatus: "inStock",
+        price: undefined,
+        note: undefined,
+        referenceUrl: undefined,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+    {
+        id: "equipment-012",
+        eventId: "event-002",
+        order: 8,
+        itemName: "アンケート用紙・QRコード",
+        purpose: "参加者・サークル担当者アンケート",
+        purchaseStatus: "completed",
+        price: undefined,
+        note: "印刷費は別途計上済み",
+        referenceUrl: undefined,
+        createdAt: new Date("2026-03-01"),
+        updatedAt: new Date("2026-03-01"),
+    },
+];
+
+// ------------------------------------------------------------
+// 景品（なし）
+// ------------------------------------------------------------
+
+export const mockEventCircleRallyPrizes: EventPrize[] = [];
+
+// ------------------------------------------------------------
+// ノート
+// ------------------------------------------------------------
+
+export const mockEventCircleRallyNotes: EventNote[] = [];
+
+// ============================================================
+// 全データを統合
+// ============================================================
+
+export const mockEventCircleRallyWithRelations: EventWithRelations = {
+    ...mockEventCircleRally,
+    contents: mockEventCircleRallyContents,
+    tasks: mockEventCircleRallyTasks,
+    equipment: mockEventCircleRallyEquipment,
+    prizes: mockEventCircleRallyPrizes,
+    notes: mockEventCircleRallyNotes,
+};
+</file>
+
+<file path="app/events/lib/types.ts">
+// app/events/lib/types.ts
+
+// イベント作成時はイベント名のみ入力で作成可能（状態初期値: planning
+// イベント名以外が未入力でも成立するUI設計
+// 空のフィールドは、基本的に作成時（CREATE）ではなく編集（PUT）から追加できるように。
+
+// データベース（Neon）導入前は模擬データで開発
+
+// ============================================================
+// タブ1&ヘッダー: イベント基本情報・メタデータ
+// ============================================================
+
+export type Event = {
+    id: string; // イベントid（必須・自動付与）
+    name: string; // イベント名 (必須)
+    category: "大イベント" | "小イベント"; // (必須)
+    // 進行状況 (必須)
+    status: "planning" | "preparing" | "in_progress" | "completed" | "archived";
+
+    // 頻繁に参照するURL（1件・ヘッダーにも表示される）
+    coreReferenceUrl?: {
+        label: string;
+        url: string;
+    };
+
+    // 基本情報（すべてオプショナル）
+    purpose?: string; // 開催目的
+    overview?: string; // 概要
+    location?: string; // 開催場所
+    date?: string; // 開催日
+    startTime?: string; // イベント開始時刻
+    endTime?: string; // イベント終了時刻
+    prepTime?: string; // 準備開始時刻
+    targetAudience?: string; // ターゲット層
+    expectedParticipants?: number; // 参加想定人数
+    budget?: number; // イベント予算総額（円）
+    promotionMethods?: string; // 宣伝方法
+
+    // 当日運営役割 { "司会": "山田", ... }
+    roles?: Record<string, string>;
+
+    // タイムテーブル { "16:30～": "イベント開始" }
+    // 柔軟に書けるようにキーも文字列型で統一（キー重複に注意）
+    timeTable?: Record<string, string>;
+
+    // 参考URL { "ラベル": "URL"} 
+    referenceUrls?: Record<string, string>;
+
+    // 任意メモ
+    memo?: string;
+
+    createdAt: Date; // 作成日 (必須)
+    updatedAt: Date; // 更新日 (必須)
+};
+
+// ============================================================
+// タブ2: イベント内容 (サブ企画)
+// ============================================================
+
+export type EventContent = {
+    id: string;
+    eventId: string;
+    order: number; // 表示順序 (必須: システムで自動採番)
+
+    name: string; // 企画名 (必須)
+    
+    // 以下、後から追記可能にするためオプショナル化
+    overview?: string; // 概要
+    description?: string; // 説明
+    flow?: string; // 企画の流れ
+    equipment?: string; // 準備物
+    referenceUrls?: string[]; // 参考URL
+    memo?: string; // 企画メモ
+
+    createdAt: Date;
+    updatedAt: Date;
+};
+
+// ============================================================
+// タブ3: タスク
+// ============================================================
+
+export type EventTask = {
+    id: string;
+    eventId: string;
+
+    // タスクカテゴリ: "企画立案段階" | "イベント内容・準備" | "宣伝" | "リハーサル" | "本番（最終確認）" | "任意カテゴリ"
+    // カテゴリも作成時は未定の場合があるためオプショナル化（UI側で "未分類" として扱うか、空欄を許容する）
+    category?: string; 
+
+    name: string; // タスク名 (必須)
+    
+    deadline?: Date; // 期限
+    assignee?: string; // 担当者 (オプショナル化)
+    
+    // 完了フラグは true/false の2値なので必須のまま（初期値 false）
+    completed: boolean; 
+    
+    memo?: string; // メモ
+
+    order: number; // カテゴリ内での表示順序 (必須)
+
+    createdAt: Date;
+    updatedAt: Date;
+};
+
+// ============================================================
+// タブ4-1: 備品
+// ============================================================
+
+export type EventEquipment = {
+    id: string;
+    eventId: string;
+    order: number; 
+
+    itemName: string; // 品名 (必須)
+    
+    // 以下、後から追記可能にするためオプショナル化
+    purpose?: string; // 用途
+    purchaseStatus?: "inStock" | "required" | "completed" // 購入有無（既存 | 要購入 | 購入済み）
+    price?: number; // 価格
+    note?: string; // 備考
+    referenceUrl?: string; // 参考URL
+
+    createdAt: Date;
+    updatedAt: Date;
+};
+
+// ============================================================
+// タブ4-2: 景品
+// ============================================================
+
+export type EventPrize = {
+    id: string;
+    eventId: string;
+    order: number;
+
+    itemName: string; // 景品名 (必須)
+    
+    // 以下、後から追記可能にするためオプショナル化
+    estimatedPrice?: number; // 想定価格
+    actualPrice?: number; // 実購入価格
+    category?: "大景品" | "中景品" | "小景品"; // カテゴリ未定も許容
+    storeCandidates?: string; // 購入先候補
+    description?: string; // 一言紹介
+    referenceUrl?: string; // 参考URL
+    proposedBy?: string; // 提案者
+
+    createdAt: Date;
+    updatedAt: Date;
+};
+
+// ============================================================
+// タブ5: イベントノート
+// ============================================================
+
+export type EventNote = {
+    id: string;
+    eventId: string;
+    order: number; // 表示順序（作成順のデフォルト、並び替え可能にする余地）
+
+    title: string; // ノートタイトル (必須)
+    
+    // 以下、後から追記可能にするためオプショナル化
+    content?: string; // 本文（Markdown対応）
+    category?: string; // 任意文字列タグ（"宣伝", "振り返り", "SNS"等、自由入力）
+    color?: "blue" | "green" | "yellow" | "pink" | "purple" | "gray"; // パステルカラー識別用
+    
+    author?: string; // 作成者（オプショナル、心理的ハードルを下げるため）
+    editor?: string; // 最終編集者（オプショナル、手動記録）
+
+    createdAt: Date;
+    updatedAt: Date;
+};
+
+// ============================================================
+// 統合型
+// ============================================================
+
+// 全データを統合した型
+// イベントタイトル作成時に空配列も一緒に作成される→中身がなくてもエラーにはならない
+export type EventWithRelations = Event & {
+    contents: EventContent[]; 
+    tasks: EventTask[]; 
+    equipment: EventEquipment[]; 
+    prizes: EventPrize[]; 
+    notes: EventNote[];
+};
+</file>
+
+<file path="app/events/page.tsx">
+// app/events/page.tsx
+
+import { EventsClient } from "./EventClient";
+import { getAllEvents } from "./lib/mock-data";
+
+// ============================================================
+// 【サーバーサイドページ】
+// 将来的にデータベース接続時、page.tsx を async にできる
+// サーバーサイド化は現時点では動作に変わりはないが、拡張性が高い
+// ============================================================
+
+export default function EventsPage() {
+    const events = getAllEvents();
+    return <EventsClient events={events} />
+}
+</file>
+
+<file path="app/globals.css">
+/* app/globals.css */
+
+@import "tailwindcss";
+
+:root {
+    --background: #ffffff;
+    --foreground: #171717;
+}
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
+    --font-family: var(--font-noto-sans-jp);
+}
+
+body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-noto-sans-jp), Arial, Helvetica, sans-serif;
+}
+</file>
+
+<file path="app/layout.tsx">
+// ziyuu-sikkou-portal/portal-app/app/layout.tsx
+
+import type { Metadata } from "next";
+import { Noto_Sans_JP } from "next/font/google";
+
+import "./globals.css";
+import { Header } from "@/components/layout/header";
+
+// フォントの設定
+const notoSansJP = Noto_Sans_JP({
+    variable: "--font-noto-sans-jp",
+    subsets: ["latin"],
+    weight: ["100", "300", "400", "500", "700", "900"],
+    display: "swap",
+});
+
+// メタデータ設定
+export const metadata: Metadata = {
+    title: "自由ヶ丘執行委員会 ポータルサイト",
+    description: "自由ヶ丘執行委員会",
+};
+
+// ============================================================
+// 【アプリ本体】
+// ルートのlayout.tsxではアプリ全体のレイアウトを設定しない。
+// アプリ全体のレイアウト-->/home配下
+// ============================================================
+
+export default function RootLayout({
+    children,
+}: Readonly<{
+    children: React.ReactNode;
+}>) {
+    return (
+        <html lang="ja" suppressHydrationWarning>
+            <body
+                suppressHydrationWarning={true}
+                className={`bg-white ${notoSansJP.variable} antialiased`}>
+                <div className="flex flex-col h-screen overflow-hidden">
+                    <Header />
+                    {/* メインレイアウトコンテナ 
+                        flex-1: ヘッダー以外の高さを埋める
+                        overflow-hidden: 内部でスクロールさせるため
+                    */}
+                    <div className="flex flex-1 overflow-hidden relative">
+                        {/* メインコンテンツ表示領域 */}
+                        <main className="flex-1 flex flex-col overflow-x-hidden overflow-y-auto relative min-w-0 bg-white">
+                            {children}
+                        </main>
+                    </div>
+                </div>
+            </body>
+        </html>
+    );
+}
+</file>
+
+<file path="app/page.tsx">
+// app/page.tsx
+
+import { redirect } from "next/navigation";
+
+// リダイレクト専用ページ
+export default function Page() {
+    redirect("/events");
+}
+</file>
+
+<file path="components/layout/header.tsx">
+// components/layout/header.tsx
+
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+
+export const Header = () => {
+
+    return (
+        <header
+            className="flex items-center justify-between bg-white/80 backdrop-blur-md border-b border-gray-200/70 shadow-2xs z-40 transition-all duration-300 relative"
+            style={{ height: "52px" }}>
+            <div className="flex items-center gap-2">
+                {/* ロゴ部分 */}
+                <Link href="/events" className="flex items-center gap-2 ml-2">
+                    <Image src="/mascot/aorun_normal.svg" alt="あおるん" width={40} height={40} />
+                    <span className="font-semibold text-gray-600">自由ヶ丘執行委員会</span>
+                </Link>
+            </div>
+        </header>
+    );
+};
+</file>
+
+<file path="components/ui/CopyButton.tsx">
+// components/ui/CopyButton.tsx
+
+"use client";
+
+import { LuCheck, LuCopy } from "react-icons/lu";;
+import { useState } from "react";
+
+// ============================================================
+// 生成されたテキストをクリップボードにコピーするボタンコンポーネント
+// ============================================================
+
+// 通常サイズ
+export const CopyButton = ({
+    text,
+    className = "",
+    label = "コピー",
+}: {
+    text: string;
+    className?: string;
+    label?: string;
+}) => {
+    const [isCopied, setIsCopied] = useState(false);
+
+    const handleCopy = async () => {
+        if (!text) return;
+
+        try {
+            await navigator.clipboard.writeText(text);
+            setIsCopied(true);
+            // 2秒後にアイコンを元に戻す
+            setTimeout(() => {
+                setIsCopied(false);
+            }, 2000);
+        } catch (err) {
+            console.error("Failed to copy text: ", err);
+        }
+    };
+
+    return (
+        <button
+            onClick={handleCopy}
+            disabled={!text || isCopied}
+            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md border transition-all 
+                ${
+                    isCopied
+                        ? "bg-green-50 text-green-700 border-green-200"
+                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-slate-700"
+                } ${className}`}
+            title="クリップボードにコピー">
+            {isCopied ? <LuCheck size={14} /> : <LuCopy size={14} />}
+            <span>{isCopied ? "コピー完了" : label}</span>
+        </button>
+    );
+};
+
+// 小さいコピーボタン（アイコンのみ、ラベルなし）
+export const SmallCopyButton = ({ text }: { text: string }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = async () => {
+        if (!text) return;
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+    };
+
+    return (
+        <button
+            onClick={handleCopy}
+            disabled={!text}
+            className={`
+                inline-flex items-center justify-center
+                w-7 h-7 rounded-md border
+                transition-all
+                ${
+                    copied
+                        ? "bg-green-50 border-green-200 text-green-600"
+                        : "bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                }
+            `}
+            title={copied ? "コピーしました" : "コピー"}>
+            {copied ? <LuCheck size={14} /> : <LuCopy size={14} />}
+        </button>
+    );
+};
+</file>
+
+<file path="documents/app/イベント管理機能について.md">
+# イベント管理機能
+
+この文書は「`items`統合・`notes`追加時の実装」を反映しています。この文書と現行の型定義に相違があった場合、現行の型定義を優先してください。
+
+## 概要
+
+自由ヶ丘執行委員会の活動のメインであるイベント開催に関する情報を総合的に管理する機能。
+
+**設計思想: 企画書中心アプローチ**
+
+- イベント管理機能に登録した情報を企画書としてエクスポート（Markdown形式）
+- 完全自動化ではなく「コピペ補助」レベルを目指す
+- 手動で追記すれば提出可能な企画書が生成できる
+
+---
+
+## 背景・目的
+
+### なぜイベント管理機能が必要か
+
+- 過去のバージョンではタスク管理機能とイベント管理機能が独立していた
+- 実際の運用では「イベントごと」にタスクを割り振っている
+- 独立したタスク管理機能より、イベント管理機能内にタスク管理を内包する方が実態に即している
+
+### 従来の運用との違い
+
+**従来:**
+
+- Google Document で手動で表を作成
+- イベントごとに情報が散在
+- 企画書作成時に情報を集約する手間
+
+**イベント管理機能導入後:**
+
+- 一元管理された情報
+- 企画書を自動生成（Markdown）
+- 情報の見返しやすさ向上
+
+---
+
+## 設計思想 / 方向性
+
+### 基本方針
+
+- イベント管理機能は独立した機能として実装
+- 他機能（議事録機能など）とは疎結合
+- イベント内で情報が完結
+- シンプルな権限管理（全員編集可能）
+
+### 柔軟な型定義
+
+- 企画書の実態を十分に表現できるように
+- 過度に複雑化せず、必要十分な柔軟性を持つ
+- オプショナルフィールドの設計が実運用に即している
+    - 「イベント名だけで作成可能」という設計が、段階的な情報追加を自然にサポート
+    - UI側で value || "-" のような処理が必要だが、これは妥当なトレードオフ
+- Record型の柔軟性
+    - roles, timeTable, referenceUrls がすべて Record<string, string>
+    - 企画ごとに異なる項目に対応できる
+    - ただしキー重複のリスクは運用でカバー
+
+---
+
+## データ構造
+
+### 基本設計
+
+**イベントメタデータ（親）と各タブ情報（子）のリレーション**
+
+- イベント基本情報（Event）
+    - イベント内容（EventContent）: 1対多
+    - タスク（EventTask）: 1対多
+    - 備品（EventEquipment）: 1対多 [Items]
+    - 景品（EventPrize）: 1対多 [Items]
+    - ノート（EventNote）: 1対多 [Notes]
+
+### 型定義の特徴
+
+**日付の扱い:**
+
+- すべての日付フィールドは `string` 型（ISO 8601形式）または `string` へシリアライズ可能な状態で管理
+- 理由: Server Component → Client Component のシリアライズに対応
+
+**リスト型フィールド:**
+
+- 宣伝方法（promotionMethods）: `string[]`
+- 企画内の準備物（equipment）: `string[]`
+- 参考URL（referenceUrls）: `string[]`
+
+**JSON型フィールド:**
+
+- 当日運営役割（roles）: `Record<string, string>`
+- 例: `{ "司会": "山田", "副司会": "佐藤" }`
+
+---
+
+## 画面構成
+
+### URL構造
+
+物品管理（備品・景品）が `items` 以下のパスに統合され、ノート機能が追加されました。
+
+```
+/events                    # イベント一覧
+/events/[id]/basic         # 基本情報タブ
+/events/[id]/content       # イベント内容タブ
+/events/[id]/tasks         # タスクタブ
+/events/[id]/items         # 物品管理タブ（リダイレクト用）
+/events/[id]/items/equipment # 物品管理タブ > 備品ビュー
+/events/[id]/items/prizes    # 物品管理タブ > 景品ビュー
+/events/[id]/notes         # ノートタブ（一覧）
+/events/[id]/notes/[noteId] # ノート詳細
+```
+
+### ページ構成
+
+### 1. イベント一覧（`/events`）
+
+**表示内容:**
+
+- イベント名
+- カテゴリ（大イベント/小イベント）
+- ステータス（企画中/開催中/開催済み/アーカイブ）
+- 開催日時
+- 開催場所
+- 概要（2行まで）
+
+**レイアウト:**
+
+- カード型グリッド表示
+- PC: 3列、タブレット: 2列、スマホ: 1列
+
+### 2. イベント詳細（共通ヘッダー + タブ）
+
+**共通ヘッダー（全タブで表示）:**
+
+- イベント名
+- カテゴリバッジ
+- ステータスバッジ
+- 概要（2行まで）
+- 開催日時
+- 開催場所
+- 参加想定人数
+
+**タブナビゲーション:**
+
+- App Router のページで管理（状態管理不要）
+- URLで状態を保持（共有可能）
+- アクティブタブをハイライト
+
+---
+
+## タブ詳細
+
+### タブ1: 基本情報
+
+**表示項目:**
+
+- 開催目的（複数行テキスト）
+- 基本情報（2列グリッド）
+    - イベント名
+    - カテゴリ
+    - 開催日
+    - 開始時間 / 終了時間
+    - 準備開始時間（オプション）
+    - 開催場所
+    - 参加想定人数
+    - イベント予算
+    - イベント責任者（オプション）
+- ターゲット層（複数行テキスト）
+- 宣伝方法（リスト表示）
+- 当日運営役割（2列グリッド）
+- 参考URL（オプション）
+- メモ（オプション/Markdown）
+
+### タブ2: イベント内容
+
+**表示形式:**
+
+- アコーディオン形式（展開/折りたたみ）
+- 企画ごとにカード表示
+
+**各企画の項目:**
+
+- 企画名
+- 概要
+- ルール説明
+- 企画の流れ
+- 準備物（リスト）
+- 参考URL（リスト）
+- メイン担当者（オプション）
+
+**企画と備品の関係:**
+
+- 企画内の準備物と全体の備品タブは**独立**（参照整合性なし）
+
+### タブ3: タスク
+
+**表示形式:**
+
+- カテゴリごとにグループ化
+- カテゴリ内で順序管理（order フィールド）
+
+**カテゴリ:**
+
+- 企画立案段階 / イベント内容・準備 / 宣伝 / リハーサル / 本番（最終確認） / 任意カテゴリ
+
+**各タスクの項目:**
+
+- タスク名
+- 期限（オプション）
+- 担当者
+- 完了/未完了（チェックボックス）
+- メモ（オプション）
+
+### タブ4: 物品管理 (Items)
+
+**概要:**
+
+備品と景品を統合したタブ。内部で「備品」「景品」のサブナビゲーションを持つ。
+
+### サブビュー1: 備品 (Equipment)
+
+**表示形式:** テーブル表示
+
+**項目:**
+
+- No.
+- 品名（数量込み、例: "ペン 5本"）
+- 用途
+- 調達状況（既存/要購入/購入済）
+- 価格（購入する場合）
+- 備考（オプション）
+- 参考リンク
+
+### サブビュー2: 景品 (Prizes)
+
+**表示形式:** テーブル表示
+
+**項目:**
+
+- No.
+- 品名
+- カテゴリ（大景品/中景品/小景品）
+- 想定価格
+- 実購入価格
+- 購入先候補
+- 一言紹介
+- 提案者
+- 参考リンク
+
+### タブ5: ノート (Notes)
+
+**概要:**
+
+イベントに関する雑多なメモ、議事録の要約、アイデア出し、振り返りなどをMarkdown形式で記録する機能。
+
+**一覧画面:**
+
+- カード形式でノートを表示
+- タイトル、カテゴリタグ、作成者、更新日時を表示
+- カテゴリに応じたアクセントカラー表示（blue, green, yellow, pink, purple, gray）
+
+**詳細画面:**
+
+- Markdownビューアーによるリッチテキスト表示
+- 編集機能（将来実装予定）
+
+**各ノートの項目:**
+
+- タイトル
+- 本文（Markdown）
+- カテゴリ（自由入力タグ: "宣伝", "振り返り"など）
+- カラー（視認性向上用）
+- 作成者 / 最終編集者
+
+---
+
+## 技術実装
+
+### アーキテクチャ
+
+**Server/Client 分離:**
+
+
+```typescript
+// page.tsx (Server Component)
+export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const event = getEventById(id); // データ取得
+    if (!event) notFound();
+    return <ClientComponent event={event} />; // Client Componentへデータを渡す
+}`
+```
+
+### ディレクトリ構成（抜粋）
+
+```
+ziyuu-sikkou-event-manage/app/events/
+├── [id]
+│   ├── basic/          # 基本情報
+│   ├── content/        # イベント内容
+│   ├── items/          # 物品管理 (Items)
+│   │   ├── equipment/  # 備品
+│   │   ├── prizes/     # 景品
+│   │   ├── layout.tsx  # Items共通レイアウト
+│   │   └── ItemsClient.tsx # 共通クライアント
+│   ├── notes/          # ノート (New)
+│   │   ├── [noteId]/   # ノート詳細
+│   │   └── page.tsx    # ノート一覧
+│   └── tasks/          # タスク
+└── components/         # 共通ヘッダー等
+```
+
+---
+
+## 今後の実装予定
+
+### Phase 1: プロトタイプ（完了）
+
+- [x]  モックデータで画面実装
+- [x]  イベント一覧・詳細
+- [x]  物品管理（備品・景品）の統合UI
+- [x]  ノート機能の実装
+- [x]  レスポンシブ対応
+
+### Phase 2: データベース接続
+
+- [ ]  Neon + Prisma のセットアップ
+- [ ]  スキーマ定義（`Event`, `EventNote`等）
+- [ ]  マイグレーション
+- [ ]  CRUD 実装
+
+### Phase 3: 企画書エクスポート
+
+- [ ]  Markdown 生成ロジック
+- [ ]  ダウンロード機能
+
+---
+
+## 設計判断の記録
+
+### なぜタブをページで管理するのか
+
+**検討した選択肢:**
+1. React の状態管理（useState）
+2. App Router のページ
+
+**選択: App Router のページ**
+
+**理由:**
+- URL で状態を保持（共有可能）
+- ブラウザの戻る/進むが自然に動作
+- 状態管理のボイラープレートが不要
+- タブごとに異なるデータ取得ロジックを書きやすい
+
+### なぜ企画の準備物と備品タブを独立させるのか
+
+**完全に独立:**
+- 企画内の準備物 → 気軽にメモ書き
+- 備品タブ → 抜け漏れチェック、購入管理
+
+**リレーションを持たせない理由:**
+- 運用上、企画段階と最終確認段階で管理粒度が異なる
+- 自動同期は混乱を招く可能性
+- シンプルさを優先
+
+### なぜ日付を string 型にするのか
+
+**理由:**
+1. Server Component → Client Component のシリアライズ
+   - Date オブジェクトは JSON 化時に ISO 文字列になる
+   - 型定義と実際の動作を一致させる
+2. Prisma（データベース）との親和性
+   - Prisma は DateTime を ISO 文字列で返す
+3. フロントエンドでの柔軟性
+   - 必要に応じて `new Date()` で変換
+
+### 備品と景品を `items` にまとめた理由
+
+**理由:**
+
+- どちらも「調達するもの」「金銭が関わるもの」という性質が共通している。
+- タブの数が増えすぎるとスマホでの操作性が低下するため、類似機能はグループ化した方がUIがスッキリする。
+
+### ノート機能を追加した理由
+
+**理由:**
+
+- 「タスク」や「基本情報」には収まらない、フロー情報（アイデア出しの過程や、当日の細かい反省点など）を記録する場所が必要だった。
+- 用途例: 振り返り、SNS発信内容など
+- 議事録（Google Docs）へのリンクだけでなく、アプリ内で完結して読めるテキスト情報があると振り返りが容易になるため。
+
+  
+### 外部リンク
+
+- [Next.js 15 Release Notes](https://nextjs.org/blog/next-15)
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [Neon Documentation](https://neon.tech/docs)
+</file>
+
+<file path="documents/tech/動的ルートパラメータの非同期化.md">
+# 動的ルートパラメータ（params）の非同期化
+
+Next.js 15 以降、PageやLayoutコンポーネントの`params`はPromise（非同期オブジェクト）に変更された。
+
+## 背景
+
+Next.js 14までは`params.id`で直接文字列にアクセスできたが、Next.js 15からは将来的な最適化のために`params`が非同期的に提供されるようになった。
+
+## 対応
+
+`prams`を使用する前に`await`を通しておく必要がある。
+
+## 参考リンク（技術ブログより）
+
+[Next.js 15でparamsが非同期になった理由と対応方法(Zenn)](https://zenn.dev/h_tatsuoka/articles/3b1d3f1b445ffb)
+
+## サンプル
+
+```typescript
+// ... imports
+
+export default async function EventDetailLayout({
+    children,
+    params,
+}: {
+    children: React.ReactNode;
+    // 型定義を Promise に変更
+    params: Promise<{ id: string }>;
+}) {
+    // params を await して id を取り出す
+    const { id } = await params;
+
+    // 取り出した id を使用する
+    const event = getEventById(id);
+
+    if (!event) {
+        notFound();
+    }
+
+    return (
+        <div className="flex-1 flex flex-col">
+            <EventHeader event={event} />
+            {/* ここも params.id ではなく解決済みの id を渡す */}
+            <TabNavigation eventId={id} /> 
+            <div className="flex-1 bg-gray-50">
+                {children}
+            </div>
+        </div>
+    );
+}
+```
+</file>
+
+<file path="package.json">
+{
+  "name": "ziyuu-sikkou-event-manage",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "mermaid": "^11.12.3",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-icons": "^5.5.0",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^16.1.0",
+    "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0",
+    "remark-breaks": "^4.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-github-blockquote-alert": "^2.0.1",
+    "remark-math": "^6.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+</file>
+
+<file path="README.md">
+# 自由ヶ丘執行委員会 イベント管理アプリ
+
+## 1. 概要・設計思想
+
+組織活動の核となる機能であり、**企画立案から当日の運営、振り返りまでを一元管理**することを目的としています。
+
+* **企画書中心アプローチ:** データを入力して終わりではなく、最終的に提出用の企画書（Markdown）が生成されるなど、実務のアウトプットに直結する実用性第一の設計思想を持っています。
+
+## 2. 主な機能と特徴
+
+実際に組織で使用中の企画書を基に、UIと型定義が作成されています。イベントに関する以下の項目を統合的に管理します。
+
+* **基本情報・内容管理:** イベントの基本データやコンテンツ内容の管理（`basic`, `content`）
+* **物品管理:** イベントで必要となる備品や景品の管理（`items/equipment`, `items/prizes`）
+* **タスク管理:** イベントに向けた準備等のタスクの進捗管理（`tasks`）
+* **ノート機能:** 議事録の要約やアイデアを記録しておく機能（`notes`）
+
+## 3. 今後のロードマップ（開発予定）
+
+* **企画書エクスポート機能:** 登録したイベント情報から、Markdown形式の企画書としてデータを出力・生成する機能を実装予定です。
+
+## 4. イベント管理機能のディレクトリ構成
+
+コロケーション（Colocation）の原則に基づき、イベント管理機能（`events`）に必要なコンポーネント、型定義、モックデータなどが1つのディレクトリに集約されています。
+</file>
+
+<file path="util/FormatDate.ts">
+// util/FormatDate.ts
+
+// 日付型の変換関数
+export function formatDate(date: Date): string {
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+        return "";
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}/${month}/${day}`;
+}
+</file>
+
+</files>

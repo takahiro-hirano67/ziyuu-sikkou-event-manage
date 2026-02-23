@@ -1,36 +1,141 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 自由ヶ丘執行委員会 イベント管理アプリ (ziyuu-sikkou-event-manage)
 
-## Getting Started
+## 1. プロジェクト概要
 
-First, run the development server:
+本プロジェクトは、自由ヶ丘執行委員会の活動の核となる「イベント開催」に関する情報を総合的に管理し、企画立案から当日の運営、振り返りまでを一元化するための専用アプリケーションです。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+以前の総合ポータルシステムから**イベント管理機能に特化**し、Google Driveやスプレッドシートに散在しがちな情報を集約することで、実務のアウトプット（企画書の作成など）に直結するシステムを目指しています。
+
+---
+
+## 2. 設計思想 (Design Philosophy)
+
+本プロジェクトは、以下の**4つの中心的な思想**に基づいて設計・開発されています。
+
+### 2-1. 内部利用特化と「信頼ベース」の設計
+不特定多数に向けたSaaSを作るのではなく、「顔の見える少人数のメンバー」が使うツールです。
+- **過剰な権限管理の廃止:** 厳密なRBAC（ロールベースアクセス制御）よりも、情報の透明性と入力のしやすさを優先します。
+- **シンプルな認証:** 複雑なID管理システムを作らず、運用コストの低い認証を採用予定です。個人とデータのリレーションは極力組まず、担当者名などは「文字列入力」を許容して入力の手間を省きます。
+
+### 2-2. 実用性第一（企画書中心アプローチ）
+「高度な技術を使うこと」ではなく、「実際に活動が楽になること」を最優先します。
+- **企画書出力:** データを入力して終わりではなく、登録したデータから提出用の企画書（Markdown形式）をエクスポートするなど、実務のアウトプットに直結させます。完全自動化ではなく「コピペ補助」レベルの柔軟性を持ちます。
+- **柔軟なデータ構造:** 「イベント名だけで作成可能」とするなど、段階的な情報追加を自然にサポートするデータ設計としています。
+
+### 2-3. Vercel完結型アーキテクチャ（DevOpsレス）
+サーバー管理や複雑なデプロイフローによる「開発以外のコスト」を極限まで削減します。
+- **Next.js フルスタック:** 以前の構成（Frontend + Backend分離）を廃止し、Next.jsのServer ComponentsとServer Actionsで完結させます。
+- **インフラの隠蔽:** Vercel + Neon (Serverless Postgres) を採用し、スケーリングやDBの稼働管理をプラットフォームに委譲します。
+
+### 2-4. コロケーションとモック駆動開発
+- **コロケーション (Colocation):** 機能ごとに必要なコンポーネント、型定義、ロジックを近いディレクトリに集約します。
+- **モック駆動:** いきなりデータベース設計から入らず、まずはUIとモックデータ（過去の実際の企画書等を使用）で「使い勝手」を確定させてから、バックエンドを実装します。これにより手戻りを防ぎます。
+
+---
+
+## 3. 技術スタック
+
+| **カテゴリ**  | **技術**                    | **選定理由**                                                                          |
+| ------------- | --------------------------- | ------------------------------------------------------------------------------------- |
+| **Framework** | **Next.js 16 (App Router)** | Server Componentsによるデータ取得の簡略化、Vercelとの親和性。非同期`params`にも対応。 |
+| **Language**  | **TypeScript**              | 型安全性による保守性の向上。バックエンド・フロントエンドの型共有。                    |
+| **Styling**   | **Tailwind CSS v4**         | 開発速度の向上と、ファイルを行き来しないスタイリング。                                |
+| **Database**  | **Neon (PostgreSQL)**       | (予定) Vercelと連携容易なサーバーレスDB。ブランチ機能による安全な開発。               |
+| **ORM**       | **Prisma**                  | (予定) 型安全なDB操作と、スキーマ定義の明確化。                                       |
+
+---
+
+## 4. アプリケーション構成
+
+### データフローの原則
+1. **Page (Server Component):**
+    - 動的ルートパラメータ（`await params`）を受け取る。
+    - DB（またはモック）からデータを取得する。
+    - シリアライズ可能なデータ（JSON）としてClient Componentへ渡す。
+2. **Client Component:**
+    - UIの描画とインタラクション（アコーディオン開閉、タブ切り替え）を担当。
+    - クライアント側での `useEffect` によるデータ取得は、特別な理由がない限り避けます。
+
+### URL構造
+タブナビゲーションは状態管理（useState）ではなく、App RouterのURLルーティングを活用しています（URLの共有が容易なため）。
+
+```text
+/events                    # イベント一覧
+/events/[id]/basic         # 基本情報タブ
+/events/[id]/content       # イベント内容タブ（各企画）
+/events/[id]/tasks         # タスクタブ
+/events/[id]/items         # 物品管理タブ（備品・景品へリダイレクト）
+/events/[id]/notes         # ノートタブ（一覧）
+/events/[id]/notes/[noteId] # ノート詳細
+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 5. 主要機能
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### イベント一覧
 
-## Learn More
+組織の全イベントを管理します。大/小イベントのカテゴリや、現在のステータス（企画中/準備中/開催中/開催済み/アーカイブ）をバッジで可視化します。
 
-To learn more about Next.js, take a look at the following resources:
+### 基本情報 (Basic)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+開催目的、日時、場所、予算、ターゲット層、当日運営役割、タイムテーブルなど、イベントのメタデータを管理します。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### イベント内容 (Content)
 
-## Deploy on Vercel
+イベント内で実施する「サブ企画（ゲームや説明会など）」をアコーディオン形式で管理します。企画ごとの概要、ルール、進行フロー、必要な準備物を記録します。
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### タスク管理 (Tasks)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+イベントごとに必要なタスクを「企画立案」「準備」「宣伝」「リハーサル」「本番」などのカテゴリ別に一元管理します。
+
+### 物品管理 (Items)
+
+「調達するもの・金銭が関わるもの」を統合管理します。
+
+* **備品:** 必要な機材や消耗品の調達状況（要購入/既存）や価格を管理。
+* **景品:** 大/中/小カテゴリごとの景品リスト、想定価格と実価格を管理。
+
+### ノート (Notes)
+
+「タスク」や「基本情報」には収まらないフロー情報をMarkdown形式で記録します。議事録の要約、アイデア出し、SNS発信内容の文案、当日の振り返りなどに利用します。
+
+---
+
+## 6. 今後のロードマップ（主要なポイント）
+
+1. **DB接続 (Neon + Prisma):** モックデータ駆動からの脱却とスキーマ定義。
+2. **認証機能の追加:** 組織内メンバー向けの簡易的なアクセス制限。
+3. **編集機能 (CRUD) の実装:** Server Actionsを用いた各データの作成・更新・削除。
+4. **企画書エクスポート機能:** 登録されたデータを基に、提出用のMarkdown形式の企画書を自動生成する機能の実装。
+
+---
+
+## 7. ディレクトリ構成
+
+```text
+ziyuu-sikkou-event-manage/
+├─ app/
+│  ├─ events/
+│  │  ├─ [id]/
+│  │  │  ├─ basic/          # 基本情報タブ
+│  │  │  ├─ content/        # イベント内容タブ
+│  │  │  ├─ items/          # 物品管理 (備品・景品の統合タブ)
+│  │  │  │  ├─ equipment/
+│  │  │  │  └─ prizes/
+│  │  │  ├─ notes/          # ノートタブ
+│  │  │  │  └─ [noteId]/
+│  │  │  └─ tasks/          # タスクタブ
+│  │  ├─ components/        # イベント管理内の共通UI (Header, Tabs等)
+│  │  ├─ lib/               # 型定義 (types.ts) と モックデータ
+│  │  └─ page.tsx           # イベント一覧ページ
+│  ├─ globals.css
+│  ├─ layout.tsx            # アプリ全体のレイアウト
+│  └─ page.tsx              # ルート (eventsへリダイレクト)
+├─ components/              # アプリ全体の共通コンポーネント (header, ui/等)
+├─ documents/               # 設計書や仕様メモ
+├─ util/                    # 汎用ユーティリティ (FormatDate.ts等)
+└─ package.json
+
+```
