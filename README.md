@@ -1,7 +1,7 @@
 # 自由ヶ丘執行委員会 イベント管理アプリ (ziyuu-sikkou-event-manage)
 
 開発中のアプリケーションです。
-現在はモックデータによる開発が完了し、Neon（データベース）を組み込んでいきます。
+現在はモックデータによる開発が完了し、今後はNeon（データベース）を組み込んでいきます。
 
 [アプリへのリンク（Vercel）](https://ziyuu-sikkou-event-manage.vercel.app/events)
 
